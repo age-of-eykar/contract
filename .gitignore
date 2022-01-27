@@ -1,4 +1,6 @@
+### Nile ###
 artifacts
+*.deployments.txt
 
 ### Linux ###
 *~
