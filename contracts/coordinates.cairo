@@ -17,6 +17,6 @@ func get_distance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     #       distance (felt): Estimated distance between the two points
     let x_distance = xmax - xmin
     let y_distance = ymax - ymin
-    let distance = sqrt(x_distance * x_distance + y_distance * y_distance)
+    let (distance) = sqrt(x_distance * x_distance + y_distance * y_distance)
     return (distance)
 end
