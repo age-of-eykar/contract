@@ -4,6 +4,7 @@
 %builtins pedersen range_check
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
+from contracts.coordinates import get_distance
 
 struct Plot:
     member owner : felt
