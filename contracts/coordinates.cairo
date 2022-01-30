@@ -1,5 +1,5 @@
 %lang starknet
-from starkware.cairo.common.math import sqrt
+from starkware.cairo.common.math import sqrt, unsigned_div_rem
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 
 @view
@@ -19,4 +19,39 @@ func get_distance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     let y_distance = ymax - ymin
     let (distance) = sqrt(x_distance * x_distance + y_distance * y_distance)
     return (distance)
+end
+
+@view
+func spiral{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        n : felt, spacing : felt) -> (x : felt, y : felt):
+    if n == 0:
+        return (0, 0)
+    end
+
+    let (base_id) = sqrt(n)
+    let (prev_circle_id, _) = unsigned_div_rem(base_id-1, 2)
+
+    let additional_cells = n - prev_circle_id * prev_circle_id
+    let circle_id = prev_circle_id + 1
+    let side_size = 2*(spacing+1)*circle_id+1
+    let (side_id, next_cells) = unsigned_div_rem(additional_cells, side_size)
+
+    if side_id == 0:
+        return (circle_id * (1 + spacing) + next_cells - 1, circle_id * (1 + spacing))
+    end
+    if side_id == 1:
+        return (circle_id * (1 + spacing), circle_id * (1 + spacing) - next_cells + 1)
+    end
+    if side_id == 2:
+        return ((-circle_id) * (1 + spacing) - next_cells + 1, (-circle_id) * (1 + spacing))
+    end
+    if side_id == 3:
+        return (next_cells - 1 - circle_id * (1 + spacing), (-circle_id) * (1 + spacing))
+    end
+
+    with_attr error_message("x must not be zero."):
+        assert 1 = 0
+        return (0, 0)
+    end
+
 end
