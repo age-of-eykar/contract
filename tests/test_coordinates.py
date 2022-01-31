@@ -7,6 +7,27 @@ from starkware.starknet.testing.starknet import Starknet
 # The path to the contract source code.
 CONTRACT_FILE = os.path.join("contracts", "coordinates.cairo")
 
+
+def felt_equal(v1, v2):
+    """
+    Checks if two felt vectors are equal.
+
+    Args:
+        v1 (int iterable): The first vector.
+        v2 (int iterable): The second vector.
+
+    Returns:
+        bool: True if the two vectors are equal, False otherwise.
+    """
+    P = 2**251 + 17 * 2**192 + 1
+    if len(v1) != len(v2):
+        return False
+    for x, y in zip(v1, v2):
+        if (P + (x - y)) % P != 0:
+            return False
+    return True
+
+
 @pytest.mark.asyncio
 async def test_get_distance():
     """Test get_distance method."""
@@ -24,6 +45,7 @@ async def test_get_distance():
     d = await contract.get_distance(-5, -5, 5, 5).call()
     assert d.result == (14,)
 
+
 @pytest.mark.asyncio
 async def test_spiral():
     """Test spiral method."""
@@ -34,13 +56,16 @@ async def test_spiral():
     )
 
     l = await contract.spiral(0, 0).call()
-    assert l.result == (0,0)
+    assert felt_equal(l.result, (0, 0))
 
     l = await contract.spiral(1, 0).call()
-    assert l.result == (0,1)
+    assert felt_equal(l.result, (0, 1))
 
     l = await contract.spiral(2, 0).call()
-    assert l.result == (1,1)
+    assert felt_equal(l.result, (1, 1))
 
     l = await contract.spiral(3, 0).call()
-    assert l.result == (1,0)
+    assert felt_equal(l.result, (1, 0))
+
+    l = await contract.spiral(4, 0).call()
+    assert felt_equal(l.result, (1, -1))
