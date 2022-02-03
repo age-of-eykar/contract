@@ -69,3 +69,15 @@ async def test_spiral():
 
     l = await contract.spiral(4, 0).call()
     assert felt_equal(l.result, (1, -1))
+
+    l = await contract.spiral(5, 0).call()
+    assert felt_equal(l.result, (0, -1))
+
+    l = await contract.spiral(6, 0).call()
+    assert felt_equal(l.result, (-1, -1))
+
+    l = await contract.spiral(9, 0).call()
+    assert felt_equal(l.result, (-1, 2))
+
+    l = await contract.spiral(12, 0).call()
+    assert felt_equal(l.result, (2, 2))
