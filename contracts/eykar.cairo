@@ -110,11 +110,27 @@ func _find_available_colony_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
 end
 
 func _create_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        name : felt, owner : felt, x : felt, y : felt) -> (id : felt):
-    let (id) = _find_available_colony_id_exp(1)
-    let (colony) = Colony(name, owner, x, y, 0, 0, 0, 0, 0, 0, id)
+        name : felt, owner : felt, x : felt, y : felt) -> (id : Colony):
+    let (id) = _find_available_colony_id(1)
+    let colony = Colony(
+        name, owner, x, y, plots_amount=0, people=0, food=0, wood=0, ores=0, redirection=id)
     colonies.write(id - 1, colony)
     return (colony)
+end
+
+@storage_var
+func _player_colonies_storage(player : felt, index : felt) -> (colony_id : felt):
+end
+
+@storage_var
+func player_colonies(player : felt) -> (colonies_length : felt):
+end
+
+@storage_var
+func add_colony_to_player(player : felt, colony_id : felt) -> ():
+    let id = player_colonies.read(player)
+    player_colonies.write(player, id + 1)
+    _player_colonies_storage.write(player, id, colony_id)
 end
 
 @external
