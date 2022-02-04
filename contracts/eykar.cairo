@@ -126,11 +126,12 @@ end
 func player_colonies(player : felt) -> (colonies_length : felt):
 end
 
-@storage_var
-func add_colony_to_player(player : felt, colony_id : felt) -> ():
-    let id = player_colonies.read(player)
+func add_colony_to_player{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        player : felt, colony_id : felt) -> ():
+    let (id) = player_colonies.read(player)
     player_colonies.write(player, id + 1)
     _player_colonies_storage.write(player, id, colony_id)
+    return ()
 end
 
 @external
