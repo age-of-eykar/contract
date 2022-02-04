@@ -1,4 +1,5 @@
 %lang starknet
+
 from starkware.cairo.common.math import sqrt, unsigned_div_rem
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 
