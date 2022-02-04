@@ -4,7 +4,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_caller_address
 from contracts.coordinates import spiral, get_distance
-from contracts.colonies import Colony, find_available_colony_id
+from contracts.colonies import Colony
 
 struct Plot:
     member owner : felt
