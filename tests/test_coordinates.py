@@ -23,7 +23,7 @@ def felt_equal(v1, v2):
     if len(v1) != len(v2):
         return False
     for x, y in zip(v1, v2):
-        if (P + (x - y)) % P != 0:
+        if (x - y) % P != 0:
             return False
     return True
 

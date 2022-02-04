@@ -5,6 +5,7 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_caller_address
+from starkware.cairo.common.math import sqrt, unsigned_div_rem
 from contracts.coordinates import spiral, get_distance
 
 struct Plot:
@@ -59,7 +60,7 @@ func get_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
     #
     #   Returns:
     #       colony (felt): struct after redirections
-    let (colony) = colonies.read(id)
+    let (colony) = colonies.read(id - 1)
     if colony.redirection != id:
         return get_colony(colony.redirection)
     else:
@@ -82,9 +83,38 @@ func _get_next_available_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
     end
 end
 
+func _find_available_colony_id_dichotomia{
+        syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        start : felt, last : felt) -> (id : felt):
+    if start == last:
+        return (start)
+    else:
+        let (id, _) = unsigned_div_rem(start + last, 2)
+        let (colony) = colonies.read(id - 1)
+        if colony.owner == 0:
+            return _find_available_colony_id_dichotomia(id, last)
+        else:
+            return _find_available_colony_id_dichotomia(start, id)
+        end
+    end
+end
+
+func _find_available_colony_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        start : felt) -> (id : felt):
+    let (colony) = colonies.read(start - 1)
+    if colony.owner == 0:
+        return _find_available_colony_id_dichotomia(start / 2, start)
+    else:
+        return _find_available_colony_id(2 * start)
+    end
+end
+
 func _create_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        name : felt) -> ():
-    return ()
+        name : felt, owner : felt, x : felt, y : felt) -> (id : felt):
+    let (id) = _find_available_colony_id_exp(1)
+    let (colony) = Colony(name, owner, x, y, 0, 0, 0, 0, 0, 0, id)
+    colonies.write(id - 1, colony)
+    return (colony)
 end
 
 @external
