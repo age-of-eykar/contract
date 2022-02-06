@@ -84,13 +84,31 @@ func _merge_util{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     if sup == 0:
         if colony.redirection != 0:
             redirect_colony(colony.redirection, next_best_id)
+            tempvar syscall_ptr = syscall_ptr
+            tempvar pedersen_ptr = pedersen_ptr
+            tempvar range_check_ptr = range_check_ptr
+        else:
+            tempvar syscall_ptr = syscall_ptr
+            tempvar pedersen_ptr = pedersen_ptr
+            tempvar range_check_ptr = range_check_ptr
         end
         return (next_best_id, next_best_plots_amount)
     else:
         if next_best_id != 0:
             if colony.redirection != 0:
                 redirect_colony(next_best_id, colony.redirection)
+                tempvar syscall_ptr = syscall_ptr
+                tempvar pedersen_ptr = pedersen_ptr
+                tempvar range_check_ptr = range_check_ptr
+            else:
+                tempvar syscall_ptr = syscall_ptr
+                tempvar pedersen_ptr = pedersen_ptr
+                tempvar range_check_ptr = range_check_ptr
             end
+        else:
+            tempvar syscall_ptr = syscall_ptr
+            tempvar pedersen_ptr = pedersen_ptr
+            tempvar range_check_ptr = range_check_ptr
         end
         return (colony.redirection, colony.plots_amount)
     end
@@ -115,6 +133,7 @@ end
 func mint_plot_with_new_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         name : felt):
     # Mints a plot on the next available location of the spawn spiral
+    alloc_locals
     let (n) = current_registration_id.read()
     let (x, y, m) = _get_next_available_plot(n)
     current_registration_id.write(m + 1)
@@ -123,7 +142,7 @@ func mint_plot_with_new_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
     let (colony_id) = merge(player, x, y)
     let (timestamp) = get_block_timestamp()
     if colony_id == 0:
-        let (colony) = create_colony(name=name, owner=player, x, y)
+        let (colony) = create_colony(name, player, x, y)
         world.write(x, y, Plot(owner=colony.redirection, dateOfOwnership=timestamp, structure=1))
     else:
         world.write(x, y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=1))
