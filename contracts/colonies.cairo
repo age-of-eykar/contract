@@ -75,7 +75,10 @@ func _find_available_colony_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
         start : felt) -> (id : felt):
     let (colony) = colonies.read(start - 1)
     if colony.owner == 0:
-        return _find_available_colony_id_dichotomia(start / 2, start)
+        if start == 1:
+                return (1)
+        end
+        return _find_available_colony_id_dichotomia(start/2, start)
     else:
         return _find_available_colony_id(2 * start)
     end

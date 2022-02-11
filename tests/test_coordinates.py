@@ -1,31 +1,12 @@
 """contract.cairo test file."""
 import os
+from starknet_util import Felt
 
 import pytest
 from starkware.starknet.testing.starknet import Starknet
 
 # The path to the contract source code.
 CONTRACT_FILE = os.path.join("contracts", "coordinates.cairo")
-
-
-def felt_equal(v1, v2):
-    """
-    Checks if two felt vectors are equal.
-
-    Args:
-        v1 (int iterable): The first vector.
-        v2 (int iterable): The second vector.
-
-    Returns:
-        bool: True if the two vectors are equal, False otherwise.
-    """
-    P = 2**251 + 17 * 2**192 + 1
-    if len(v1) != len(v2):
-        return False
-    for x, y in zip(v1, v2):
-        if (x - y) % P != 0:
-            return False
-    return True
 
 
 @pytest.mark.asyncio
@@ -56,28 +37,28 @@ async def test_spiral():
     )
 
     l = await contract.spiral(0, 0).call()
-    assert felt_equal(l.result, (0, 0))
+    assert Felt(l.result[0]) == Felt(0) and Felt(l.result[1]) == Felt(0)
 
     l = await contract.spiral(1, 0).call()
-    assert felt_equal(l.result, (0, 1))
+    assert Felt(l.result[0]) == Felt(0) and Felt(l.result[1]) == Felt(1)
 
     l = await contract.spiral(2, 0).call()
-    assert felt_equal(l.result, (1, 1))
+    assert Felt(l.result[0]) == Felt(1) and Felt(l.result[1]) == Felt(1)
 
     l = await contract.spiral(3, 0).call()
-    assert felt_equal(l.result, (1, 0))
+    assert Felt(l.result[0]) == Felt(1) and Felt(l.result[1]) == Felt(0)
 
     l = await contract.spiral(4, 0).call()
-    assert felt_equal(l.result, (1, -1))
+    assert Felt(l.result[0]) == Felt(1) and Felt(l.result[1]) == Felt(-1)
 
     l = await contract.spiral(5, 0).call()
-    assert felt_equal(l.result, (0, -1))
+    assert Felt(l.result[0]) == Felt(0) and Felt(l.result[1]) == Felt(-1)
 
     l = await contract.spiral(6, 0).call()
-    assert felt_equal(l.result, (-1, -1))
+    assert Felt(l.result[0]) == Felt(-1) and Felt(l.result[1]) == Felt(-1)
 
     l = await contract.spiral(9, 0).call()
-    assert felt_equal(l.result, (-1, 2))
+    assert Felt(l.result[0]) == Felt(-1) and Felt(l.result[1]) == Felt(2)
 
     l = await contract.spiral(12, 0).call()
-    assert felt_equal(l.result, (2, 2))
+    assert Felt(l.result[0]) == Felt(2) and Felt(l.result[1]) == Felt(2)
