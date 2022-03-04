@@ -39,7 +39,7 @@ end
 
 func _get_next_available_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         n : felt) -> (x : felt, y : felt, n : felt):
-    let (x, y) = spiral(n, 0)
+    let (x, y) = spiral(n, 16)
     let (plot) = world.read(x, y)
     if plot.owner == 0:
         return (x, y, n)
