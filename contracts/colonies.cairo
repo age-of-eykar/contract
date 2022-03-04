@@ -39,7 +39,7 @@ func get_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
 end
 
 func create_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        name : felt, owner : felt, x : felt, y : felt) -> (id : Colony):
+        name : felt, owner : felt, x : felt, y : felt) -> (colony : Colony):
     let (id) = _find_available_colony_id(1)
     let colony = Colony(
         name, owner, x, y, plots_amount=0, people=0, food=0, wood=0, ores=0, redirection=id)
