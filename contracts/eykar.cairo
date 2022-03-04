@@ -172,6 +172,7 @@ func mint_plot_with_new_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
     let (timestamp) = get_block_timestamp()
     if colony_id == 0:
         let (colony) = create_colony(name, player, x, y)
+        add_colony_to_player(player, colony_id)
         world.write(x, y, Plot(owner=colony.redirection, dateOfOwnership=timestamp, structure=1))
     else:
         world.write(x, y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=1))

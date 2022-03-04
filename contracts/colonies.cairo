@@ -68,7 +68,7 @@ func redirect_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
         wood=old_colony.wood + new_colony.wood,
         ores=old_colony.ores + new_colony.ores,
         redirection=old_colony.redirection))
-        return ()
+    return ()
 end
 
 func _find_available_colony_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -76,9 +76,9 @@ func _find_available_colony_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
     let (colony) = colonies.read(start - 1)
     if colony.owner == 0:
         if start == 1:
-                return (1)
+            return (1)
         end
-        return _find_available_colony_id_dichotomia(start/2, start)
+        return _find_available_colony_id_dichotomia(start / 2, start)
     else:
         return _find_available_colony_id(2 * start)
     end
