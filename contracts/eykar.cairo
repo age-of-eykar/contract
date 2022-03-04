@@ -4,6 +4,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 from starkware.cairo.common.math_cmp import is_le
+from starkware.cairo.common.alloc import alloc
 from contracts.coordinates import spiral, get_distance
 from contracts.colonies import Colony, get_colony, create_colony, redirect_colony
 
@@ -52,13 +53,41 @@ func _player_colonies_storage(player : felt, index : felt) -> (colony_id : felt)
 end
 
 @storage_var
-func player_colonies(player : felt) -> (colonies_length : felt):
+func _player_colonies_len(player : felt) -> (colonies_length : felt):
+end
+
+func _get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        player : felt, colonies_index : felt, colonies_len : felt, colonies : felt*):
+    if colonies_index == colonies_len:
+        return ()
+    end
+
+    let (colony) = _player_colonies_storage.read(player, colonies_index)
+    assert colonies[colonies_index] = colony
+
+    _get_player_colonies(player, colonies_index + 1, colonies_len, colonies)
+    return ()
+end
+
+@view
+func get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        player : felt) -> (colonies_len : felt, colonies : felt*):
+    alloc_locals
+    let (colonies) = alloc()
+    let (colonies_len) = _player_colonies_len.read(player)
+    if colonies_len == 0:
+        return (colonies_len, colonies)
+    end
+
+    # Recursively add colonies id from storage to the colonies array
+    _get_player_colonies(player, 0, colonies_len, colonies)
+    return (colonies_len, colonies)
 end
 
 func add_colony_to_player{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         player : felt, colony_id : felt) -> ():
-    let (id) = player_colonies.read(player)
-    player_colonies.write(player, id + 1)
+    let (id) = _player_colonies_len.read(player)
+    _player_colonies_len.write(player, id + 1)
     _player_colonies_storage.write(player, id, colony_id)
     return ()
 end

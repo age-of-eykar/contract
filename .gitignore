@@ -1,6 +1,7 @@
 ### Nile ###
 artifacts
 *.deployments.txt
+node.json
 
 ### Linux ###
 *~
