@@ -22,4 +22,4 @@ async def test_mint_plot():
     await contract.mint_plot_with_new_colony(123).invoke(caller_address=player)
     await contract.mint_plot_with_new_colony(456).invoke(caller_address=player)
     execution_info = await contract.get_player_colonies(player).call()
-    assert len(execution_info.result[0]) == 2
+    assert execution_info.result[0] == [1, 2]

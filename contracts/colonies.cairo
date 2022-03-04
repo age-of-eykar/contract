@@ -93,9 +93,9 @@ func _find_available_colony_id_dichotomia{
         let (id, _) = unsigned_div_rem(start + last, 2)
         let (colony) = colonies.read(id - 1)
         if colony.owner == 0:
-            return _find_available_colony_id_dichotomia(id, last)
-        else:
             return _find_available_colony_id_dichotomia(start, id)
+        else:
+            return _find_available_colony_id_dichotomia(id+1, last)
         end
     end
 end
