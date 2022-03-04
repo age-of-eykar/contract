@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <img src="https://eykar.org/logo512.png" alt="Eykar" width="256">
+  <img src="https://eykar.org/logo.svg" alt="Eykar" width="256">
   <br>
 </h1>
 
