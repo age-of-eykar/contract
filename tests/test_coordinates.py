@@ -57,8 +57,15 @@ async def test_spiral():
     l = await contract.spiral(6, 0).call()
     assert Felt(l.result[0]) == Felt(-1) and Felt(l.result[1]) == Felt(-1)
 
+    l = await contract.spiral(8, 0).call()
+    assert Felt(l.result[0]) == Felt(-1) and Felt(l.result[1]) == Felt(1)
+
+    l = await contract.spiral(8, 1).call()
+    assert Felt(l.result[0]) == Felt(-2) and Felt(l.result[1]) == Felt(2)
+
+    l = await contract.spiral(8, 10).call()
+    assert Felt(l.result[0]) == Felt(-11) and Felt(l.result[1]) == Felt(11)
+
     l = await contract.spiral(9, 0).call()
     assert Felt(l.result[0]) == Felt(-1) and Felt(l.result[1]) == Felt(2)
 
-    l = await contract.spiral(12, 0).call()
-    assert Felt(l.result[0]) == Felt(2) and Felt(l.result[1]) == Felt(2)
