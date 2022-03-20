@@ -18,6 +18,10 @@ end
 func world(x : felt, y : felt) -> (plot : Plot):
 end
 
+@event
+func world_update(x : felt, y : felt):
+end
+
 @view
 func get_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         x : felt, y : felt) -> (plot : Plot):
@@ -177,5 +181,6 @@ func mint_plot_with_new_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
     else:
         world.write(x, y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=1))
     end
+    world_update.emit(x, y)
     return ()
 end
