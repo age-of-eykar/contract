@@ -31,13 +31,11 @@ func spiral{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
 
     let (base_id) = sqrt(n)
     let (prev_circle_id, _) = unsigned_div_rem(base_id - 1, 2)
-
     let id = prev_circle_id + 1
-    let prev_side_size = 2 * (spacing + 1) * prev_circle_id + 1
+    let prev_side_size = 2 * prev_circle_id + 1
     let additional_cells = n - prev_side_size * prev_side_size
-    let side_size = 2 * (spacing + 1) * id
+    let side_size = 2 * id
     let (side_id, next_cells) = unsigned_div_rem(additional_cells, side_size)
-
     if side_id == 0:
         return ((next_cells - id + 1) * (spacing + 1), id * (spacing + 1))
     end
