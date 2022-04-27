@@ -3,11 +3,11 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.math_cmp import is_le, is_nn
+from starkware.cairo.common.math import signed_div_rem
 
 from contracts.szudzik import random_felt
 from contracts.fixed_point_numbers import (
     Math64x61_assert64x61 as assert64x61,
-    Math64x61_toFelt as to_felt,
     Math64x61_fromFelt as from_felt,
     Math64x61_add as add,
     Math64x61_sub as sub,
@@ -16,7 +16,9 @@ from contracts.fixed_point_numbers import (
     Math64x61_pow as pow,
     Math64x61_sqrt as sqrt,
     Math64x61_ONE as ONE,
-    Math64x61_floor as floor
+    Math64x61_floor as floor,
+    Math64x61_FRACT_PART as FRACT_PART,
+    Math64x61_BOUND as BOUND
 )
 
 #using Point = (x : felt, y : felt)
