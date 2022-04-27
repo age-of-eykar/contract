@@ -1,0 +1,5 @@
+ecdsa
+fastecdsa
+sympy
+cairo-lang
+cairo-nile
