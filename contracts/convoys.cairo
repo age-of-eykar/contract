@@ -134,6 +134,7 @@ end
 # Hardcoded
 #
 
+@view
 func get_movability(convoyable_type : felt) -> (movability : felt):
     # Returns the moving capacity of a convoyable
     # this can be negative (eg if the convoyable is a content and not a container)
@@ -147,6 +148,7 @@ func get_movability(convoyable_type : felt) -> (movability : felt):
     dw 5  # horseman
 end
 
+@view
 func get_speed(convoyable_type : felt) -> (movability : felt):
     # Returns the speed of a convoyable
     # -1 if the convoyable is not a vehicle

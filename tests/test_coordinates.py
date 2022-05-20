@@ -1,4 +1,4 @@
-"""contract.cairo test file."""
+"""coordinates.cairo test file."""
 import os
 from starknet_util import Felt
 
