@@ -3,10 +3,14 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
+from starkware.cairo.common.bool import TRUE, FALSE
+from starkware.cairo.common.math import assert_le
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.alloc import alloc
+
 from contracts.coordinates import spiral, get_distance
 from contracts.colonies import Colony, get_colony, create_colony, redirect_colony
+from contracts.convoys import get_convoy_strength, contains_convoy, convoy_arrival
 
 #
 # World
@@ -205,9 +209,76 @@ func mint_plot_with_new_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
     return ()
 end
 
+func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt, convoy_id : felt, required_strength : felt
+) -> ():
+    # Asserts that the plot is conquerable
+    #
+    # Parameters:
+    #     x (felt): The x coordinate of the plot
+    #     y (felt): The y coordinate of the plot
+    #     convoy_id (felt): The id of the convoy
+    #     required_strength (felt): The required strength
+    #
+    # Returns:
+    #     ():
+
+    # todo: check convoy owner
+
+    # Check if the plot is already owned
+    let (plot : Plot) = world.read(x, y)
+    assert plot.owner = 0
+
+    # Check if the convoy is arrived to the destination
+    let (date : felt) = convoy_arrival.read(convoy_id)
+    let (timestamp : felt) = get_block_timestamp()
+    assert_le(date, timestamp)
+
+    # Check if the convoy belongs to that plot
+    let (found) = contains_convoy(x, y, convoy_id)
+    assert found = TRUE
+
+    # Get convoy strength
+    let (strength : felt) = get_convoy_strength(convoy_id)
+    assert_le(required_strength, strength)
+
+    return ()
+end
+
 @external
-func conquer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(x : felt, y : felt):
+func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt, convoy_id : felt, source_x, source_y : felt
+):
     # Conquers a plot
-    # todo
+    #
+    # Parameters:
+    #     x (felt): The x coordinate of the plot
+    #     y (felt): The y coordinate of the plot
+    #     convoy_id (felt): The id of the convoy
+    #     source_x (felt): The x coordinate of the source plot
+    #     source_y (felt): The y coordinate of the source plot
+    #
+
+    assert_conquerable(x, y, convoy_id, 3)
+    # todo:
+    # assert user owns source plot colony
+    # add plot to colony of source
+
+    return ()
+end
+
+@external
+func merge_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x1 : felt, y1 : felt, x2 : felt, y2 : felt
+):
+    # Merges two colonies
+    return ()
+end
+
+@external
+func settle{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt, convoy_id : felt
+):
+    # Create a new colony
     return ()
 end

@@ -1,11 +1,11 @@
 %lang starknet
-%builtins pedersen range_check
 
 # Here is how to transfer resources in space and time
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.alloc import alloc
+from starkware.cairo.common.bool import TRUE, FALSE
 
 #
 # Getters
@@ -40,6 +40,50 @@ func _get_convoyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
     return ()
 end
 
+@view
+func contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt, convoy_id : felt
+) -> (contained : felt):
+    let (found_id) = chained_convoys.read(x, y)
+    return _contains_convoy(found_id, convoy_id)
+end
+
+func _contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    to_check : felt, to_find : felt
+) -> (contained : felt):
+    if to_check == to_find:
+        return (TRUE)
+    end
+    if to_check == 0:
+        return (FALSE)
+    end
+    let next_to_check : felt = next_chained_convoy.read(to_check)
+    return _contains_convoy(next_to_check, to_find)
+end
+
+@view
+func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt
+) -> (strength : felt):
+    alloc_locals
+    let (convoyables_len : felt, convoyables : felt*) = get_convoyables(convoy_id)
+    return _get_convoyables_strength(convoyables_len, convoyables)
+end
+
+func _get_convoyables_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoyables_len : felt, convoyables : felt*
+) -> (strength : felt):
+    if convoyables_len == 0:
+        return (0)
+    else:
+        let convoyable_id = [convoyables]
+        alloc_locals
+        let (convoyable_strength) = _get_strength(convoyable_id)
+        let (next_strength) = _get_convoyables_strength(convoyables_len - 1, convoyables + 1)
+        return (convoyable_strength + next_strength)
+    end
+end
+
 #
 # Functions
 #
@@ -61,7 +105,7 @@ func _reserve_convoy_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     return (convoy_id)
 end
 
-func _write_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func _write_convoyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, index : felt, convoyables_len : felt, convoyables : felt*
 ) -> ():
     # Write a convoyable array to a convoy
@@ -76,7 +120,7 @@ func _write_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
         return ()
     end
     convoy_content.write(convoy_id, index, convoyables[index])
-    _write_convoy(convoy_id, index + 1, convoyables_len, convoyables)
+    _write_convoyables(convoy_id, index + 1, convoyables_len, convoyables)
     return ()
 end
 
@@ -109,11 +153,23 @@ func free_convoy_id() -> (convoy_id : felt):
 end
 
 @storage_var
-func convoy_size(convoy_id) -> (size : felt):
+func convoy_size(convoy_id : felt) -> (size : felt):
 end
 
 @storage_var
-func convoy_content(convoy_id, index) -> (convoyable_id : felt):
+func convoy_arrival(convoy_id : felt) -> (date : felt):
+end
+
+@storage_var
+func convoy_content(convoy_id : felt, index : felt) -> (convoyable_id : felt):
+end
+
+@storage_var
+func chained_convoys(x : felt, y : felt) -> (convoy_id : felt):
+end
+
+@storage_var
+func next_chained_convoy(convoy_id : felt) -> (next_convoy_id : felt):
 end
 
 # convoyables
