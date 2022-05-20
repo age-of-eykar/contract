@@ -8,6 +8,7 @@ from starkware.starknet.testing.starknet import Starknet
 # The path to the contract source code.
 CONTRACT_FILE = os.path.join("contracts", "eykar.cairo")
 
+
 @pytest.mark.asyncio
 async def test_mint_plot():
     """Test mint_plot method."""

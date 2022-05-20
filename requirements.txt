@@ -3,3 +3,4 @@ fastecdsa
 sympy
 cairo-lang
 cairo-nile
+black

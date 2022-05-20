@@ -8,6 +8,10 @@ from starkware.cairo.common.alloc import alloc
 from contracts.coordinates import spiral, get_distance
 from contracts.colonies import Colony, get_colony, create_colony, redirect_colony
 
+#
+# World
+#
+
 struct Plot:
     member owner : felt
     member dateOfOwnership : felt
@@ -24,7 +28,8 @@ end
 
 @view
 func get_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        x : felt, y : felt) -> (plot : Plot):
+    x : felt, y : felt
+) -> (plot : Plot):
     # Gets a plot object at the given coordinates
     #
     #   Parameters:
@@ -37,12 +42,17 @@ func get_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
     return (plot)
 end
 
+#
+# Colonies
+#
+
 @storage_var
 func current_registration_id() -> (id : felt):
 end
 
 func _get_next_available_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        n : felt) -> (x : felt, y : felt, n : felt):
+    n : felt
+) -> (x : felt, y : felt, n : felt):
     let (x, y) = spiral(n, 16)
     let (plot) = world.read(x, y)
     if plot.owner == 0:
@@ -61,7 +71,8 @@ func _player_colonies_len(player : felt) -> (colonies_length : felt):
 end
 
 func _get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        player : felt, colonies_index : felt, colonies_len : felt, colonies : felt*):
+    player : felt, colonies_index : felt, colonies_len : felt, colonies : felt*
+):
     if colonies_index == colonies_len:
         return ()
     end
@@ -75,7 +86,8 @@ end
 
 @view
 func get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        player : felt) -> (colonies_len : felt, colonies : felt*):
+    player : felt
+) -> (colonies_len : felt, colonies : felt*):
     alloc_locals
     let (colonies) = alloc()
     let (colonies_len) = _player_colonies_len.read(player)
@@ -89,7 +101,8 @@ func get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 end
 
 func add_colony_to_player{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        player : felt, colony_id : felt) -> ():
+    player : felt, colony_id : felt
+) -> ():
     let (id) = _player_colonies_len.read(player)
     _player_colonies_len.write(player, id + 1)
     _player_colonies_storage.write(player, id, colony_id)
@@ -97,7 +110,8 @@ func add_colony_to_player{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, rang
 end
 
 func _merge_util{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        owner : felt, x : felt, y : felt, n : felt) -> (id : felt, plots_amount : felt):
+    owner : felt, x : felt, y : felt, n : felt
+) -> (id : felt, plots_amount : felt):
     alloc_locals
     if n == 0:
         return (0, 0)
@@ -148,7 +162,8 @@ func _merge_util{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 end
 
 func merge{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        owner : felt, x : felt, y : felt) -> (id : felt):
+    owner : felt, x : felt, y : felt
+) -> (id : felt):
     # Merges colonies around a specific plot
     #
     # Parameters:
@@ -162,9 +177,14 @@ func merge{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     return (id)
 end
 
+#
+# Interactions
+#
+
 @external
 func mint_plot_with_new_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        name : felt):
+    name : felt
+):
     # Mints a plot on the next available location of the spawn spiral
     alloc_locals
     let (n) = current_registration_id.read()
@@ -182,5 +202,12 @@ func mint_plot_with_new_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
         world.write(x, y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=1))
     end
     world_update.emit(x, y)
+    return ()
+end
+
+@external
+func conquer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(x : felt, y : felt):
+    # Conquers a plot
+    # todo
     return ()
 end

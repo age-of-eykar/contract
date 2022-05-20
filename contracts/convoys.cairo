@@ -135,7 +135,7 @@ end
 #
 
 @view
-func get_movability(convoyable_type : felt) -> (movability : felt):
+func _get_movability(convoyable_type : felt) -> (movability : felt):
     # Returns the moving capacity of a convoyable
     # this can be negative (eg if the convoyable is a content and not a container)
     let (data_address) = get_label_location(movabilities)
@@ -149,7 +149,7 @@ func get_movability(convoyable_type : felt) -> (movability : felt):
 end
 
 @view
-func get_speed(convoyable_type : felt) -> (movability : felt):
+func _get_speed(convoyable_type : felt) -> (movability : felt):
     # Returns the speed of a convoyable
     # -1 if the convoyable is not a vehicle
     let (data_address) = get_label_location(speed)
@@ -159,5 +159,33 @@ func get_speed(convoyable_type : felt) -> (movability : felt):
     dw 1  # human
     dw -1  # food
     dw -1  # horse
+    dw 2  # horseman
+end
+
+@view
+func _get_strength(convoyable_type : felt) -> (movability : felt):
+    # Returns the strength of a convoyable
+    # 0 if the convoyable doesn't have strength
+    let (data_address) = get_label_location(food)
+    return (cast(data_address, felt*)[convoyable_type])
+
+    food:
+    dw 1  # human
+    dw 0  # food
+    dw 0  # horse
+    dw 2  # horseman
+end
+
+@view
+func _get_protection(convoyable_type : felt) -> (movability : felt):
+    # Returns the protection of a convoyable
+    # 0 if the convoyable doesn't provide protection
+    let (data_address) = get_label_location(food)
+    return (cast(data_address, felt*)[convoyable_type])
+
+    food:
+    dw 1  # human
+    dw 0  # food
+    dw 1  # horse
     dw 2  # horseman
 end
