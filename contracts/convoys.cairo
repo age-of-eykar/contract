@@ -35,7 +35,7 @@ end
 func _get_convoyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, index : felt, convoy_size : felt, convoyables : felt*
 ):
-    if convoy_id == convoy_size:
+    if index == convoy_size:
         return ()
     end
 
@@ -73,7 +73,8 @@ func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 ) -> (strength : felt):
     alloc_locals
     let (convoyables_len : felt, convoyables : felt*) = get_convoyables(convoy_id)
-    return _get_convoyables_strength(convoyables_len, convoyables)
+    #return _get_convoyables_strength(convoyables_len, convoyables)
+    return (4)
 end
 
 func _get_convoyables_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -104,6 +105,23 @@ func create_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
     return (convoy_id)
 end
 
+func bind_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt
+) -> ():
+    # Binds the convoy to the location
+    # If the location is already bound, it will be chained
+    #
+    #   Parameters:
+    #       convoy_id (felt) : The convoy to bind
+    #       x (felt) : The x coordinate of the location
+    #       y (felt) : The y coordinate of the location
+
+    let (link : felt) = chained_convoys.read(x, y)
+    next_chained_convoy.write(convoy_id, link)
+    chained_convoys.write(x, y, convoy_id)
+    return ()
+end
+
 func _reserve_convoy_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
     convoy_id : felt
 ):
@@ -124,7 +142,7 @@ func _write_convoyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     #       convoyables_len (felt): The length of the convoyables array
     #       convoyables (felt*): The array of convoyables to write
     #
-    if convoyables_len == 0:
+    if convoyables_len == index:
         return ()
     end
     convoy_content.write(convoy_id, index, convoyables[index])

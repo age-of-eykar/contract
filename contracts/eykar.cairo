@@ -4,13 +4,14 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 from starkware.cairo.common.bool import TRUE, FALSE
-from starkware.cairo.common.math import assert_le
+from starkware.cairo.common.math import assert_le, abs_value
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.alloc import alloc
 
 from contracts.coordinates import spiral, get_distance
 from contracts.colonies import Colony, colonies, get_colony, create_colony, redirect_colony
 from contracts.convoys import get_convoy_strength, contains_convoy, convoy_meta, ConvoyMeta
+from contracts.convoys_factory import create_mint_convoy
 
 #
 # World
@@ -44,6 +45,25 @@ func get_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
     #       plot (Plot): The plot object at the given coordinates
     let (plot) = world.read(x, y)
     return (plot)
+end
+
+@view
+func assert_in_contact{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x1 : felt, y1 : felt, x2 : felt, y2 : felt
+) -> ():
+    # Checks if two plots are in contact
+    #
+    #   Parameters:
+    #       x1 (felt): The x coordinate of the first plot
+    #       y1 (felt): The y coordinate of the first plot
+    #       x2 (felt): The x coordinate of the second plot
+    #       y2 (felt): The y coordinate of the second plot
+
+    let (x_distance) = abs_value(x2 - x1)
+    let (y_distance) = abs_value(y2 - y1)
+    assert_le(x_distance, 1)
+    assert_le(y_distance, 1)
+    return ()
 end
 
 #
@@ -186,9 +206,7 @@ end
 #
 
 @external
-func mint_plot_with_new_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    name : felt
-):
+func mint{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(name : felt):
     # Mints a plot on the next available location of the spawn spiral
     alloc_locals
     let (n) = current_registration_id.read()
@@ -205,6 +223,7 @@ func mint_plot_with_new_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
     else:
         world.write(x, y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=1))
     end
+    create_mint_convoy(player, x, y)
     world_update.emit(x, y)
     return ()
 end
@@ -220,8 +239,6 @@ func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     #     convoy_id (felt): The id of the convoy
     #     required_strength (felt): The required strength
     #
-    # Returns:
-    #     ():
 
     # Check if the plot is already owned
     let (plot : Plot) = world.read(x, y)
@@ -257,6 +274,9 @@ func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     #     convoy_id (felt): The id of the convoy
 
     alloc_locals
+    # check target is in contact with source
+    assert_in_contact(target_x, target_y, source_x, source_y)
+
     # check caller is convoy owner
     let meta : ConvoyMeta = convoy_meta.read(convoy_id)
     let (caller : felt) = get_caller_address()
@@ -264,18 +284,16 @@ func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     # check plot is conquerable
     assert_conquerable(target_x, target_y, convoy_id, 3)
 
-    # todo:
-
     # assert user owns source plot colony
     let (plot : Plot) = world.read(source_x, source_y)
     let colony_id : felt = plot.owner
-    let (colony : Colony) = colonies.read(colony_id)
+    let (colony : Colony) = colonies.read(colony_id - 1)
     assert colony.owner = caller
 
     # add plot to colony of source
     let (timestamp) = get_block_timestamp()
     world.write(target_x, target_y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=2))
-
+    world_update.emit(target_x, target_y)
     return ()
 end
 
