@@ -7,6 +7,12 @@ from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.bool import TRUE, FALSE
 
+struct ConvoyMeta:
+    member owner : felt  # address
+    member arrival : felt  # date
+    member size : felt
+end
+
 #
 # Getters
 #
@@ -16,14 +22,14 @@ func get_convoyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
 ) -> (convoyables_len : felt, convoyables : felt*):
     alloc_locals
     let (convoyables) = alloc()
-    let (convoy_len) = convoy_size.read(convoy_id)
-    if convoy_len == 0:
-        return (convoy_len, convoyables)
+    let (meta) = convoy_meta.read(convoy_id)
+    if meta.size == 0:
+        return (meta.size, convoyables)
     end
 
     # Recursively add convoyable id from storage to the convoyables array
-    _get_convoyables(convoy_id, 0, convoy_len, convoyables)
-    return (convoy_len, convoyables)
+    _get_convoyables(convoy_id, 0, meta.size, convoyables)
+    return (meta.size, convoyables)
 end
 
 func _get_convoyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -88,11 +94,13 @@ end
 # Functions
 #
 func create_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoyables_len : felt, convoyables : felt*
+    owner : felt, arrival : felt, convoyables_len : felt, convoyables : felt*
 ) -> (convoy_id : felt):
     alloc_locals
     let (convoy_id) = _reserve_convoy_id()
-    convoy_size.write(convoy_id, convoyables_len)
+    let meta : ConvoyMeta = ConvoyMeta(owner=owner, arrival=arrival, size=convoyables_len)
+    convoy_meta.write(convoy_id, meta)
+    _write_convoyables(convoy_id, 0, convoyables_len, convoyables)
     return (convoy_id)
 end
 
@@ -153,11 +161,7 @@ func free_convoy_id() -> (convoy_id : felt):
 end
 
 @storage_var
-func convoy_size(convoy_id : felt) -> (size : felt):
-end
-
-@storage_var
-func convoy_arrival(convoy_id : felt) -> (date : felt):
+func convoy_meta(convoy_id : felt) -> (meta : ConvoyMeta):
 end
 
 @storage_var

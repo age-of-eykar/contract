@@ -9,10 +9,6 @@ struct Colony:
     member x : felt  # place of power location
     member y : felt  # place of power location
     member plots_amount : felt
-    member people : felt
-    member food : felt
-    member wood : felt
-    member ores : felt
     member redirection : felt  # redirect to itself if is destination
 end
 
@@ -42,7 +38,7 @@ func create_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
         name : felt, owner : felt, x : felt, y : felt) -> (colony : Colony):
     let (id) = _find_available_colony_id(1)
     let colony = Colony(
-        name, owner, x, y, plots_amount=0, people=0, food=0, wood=0, ores=0, redirection=id)
+        name, owner, x, y, plots_amount=0, redirection=id)
     colonies.write(id - 1, colony)
     return (colony)
 end
@@ -56,17 +52,12 @@ func redirect_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
         id - 1,
         Colony(
         old_colony.name, old_colony.owner, old_colony.x, old_colony.y,
-        plots_amount=old_colony.plots_amount, people=old_colony.people,
-        food=old_colony.food, wood=old_colony.wood, ores=old_colony.ores,
+        plots_amount=old_colony.plots_amount,
         redirection=new_colony.redirection))
     colonies.write(
         new_id - 1,
         Colony(new_colony.name, new_colony.owner, new_colony.x, new_colony.y,
         plots_amount=old_colony.plots_amount + new_colony.plots_amount,
-        people=old_colony.people + new_colony.people,
-        food=old_colony.food + new_colony.food,
-        wood=old_colony.wood + new_colony.wood,
-        ores=old_colony.ores + new_colony.ores,
         redirection=old_colony.redirection))
     return ()
 end

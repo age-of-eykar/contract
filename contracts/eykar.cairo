@@ -9,8 +9,8 @@ from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.alloc import alloc
 
 from contracts.coordinates import spiral, get_distance
-from contracts.colonies import Colony, get_colony, create_colony, redirect_colony
-from contracts.convoys import get_convoy_strength, contains_convoy, convoy_arrival
+from contracts.colonies import Colony, colonies, get_colony, create_colony, redirect_colony
+from contracts.convoys import get_convoy_strength, contains_convoy, convoy_meta, ConvoyMeta
 
 #
 # World
@@ -223,16 +223,14 @@ func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     # Returns:
     #     ():
 
-    # todo: check convoy owner
-
     # Check if the plot is already owned
     let (plot : Plot) = world.read(x, y)
     assert plot.owner = 0
 
     # Check if the convoy is arrived to the destination
-    let (date : felt) = convoy_arrival.read(convoy_id)
+    let (meta : ConvoyMeta) = convoy_meta.read(convoy_id)
     let (timestamp : felt) = get_block_timestamp()
-    assert_le(date, timestamp)
+    assert_le(meta.arrival, timestamp)
 
     # Check if the convoy belongs to that plot
     let (found) = contains_convoy(x, y, convoy_id)
@@ -247,22 +245,36 @@ end
 
 @external
 func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x : felt, y : felt, convoy_id : felt, source_x, source_y : felt
+    target_x : felt, target_y : felt, source_x : felt, source_y : felt, convoy_id : felt
 ):
     # Conquers a plot
     #
     # Parameters:
-    #     x (felt): The x coordinate of the plot
-    #     y (felt): The y coordinate of the plot
+    #     target_x (felt): The x coordinate of the plot to conquer
+    #     target_y (felt): The y coordinate of the plot to conquer
+    #     source_x (felt): The x coordinate of the plot to extend
+    #     source_y (felt): The y coordinate of the plot to extend
     #     convoy_id (felt): The id of the convoy
-    #     source_x (felt): The x coordinate of the source plot
-    #     source_y (felt): The y coordinate of the source plot
-    #
 
-    assert_conquerable(x, y, convoy_id, 3)
+    alloc_locals
+    # check caller is convoy owner
+    let meta : ConvoyMeta = convoy_meta.read(convoy_id)
+    let (caller : felt) = get_caller_address()
+    assert meta.owner = caller
+    # check plot is conquerable
+    assert_conquerable(target_x, target_y, convoy_id, 3)
+
     # todo:
+
     # assert user owns source plot colony
+    let (plot : Plot) = world.read(source_x, source_y)
+    let colony_id : felt = plot.owner
+    let (colony : Colony) = colonies.read(colony_id)
+    assert colony.owner = caller
+
     # add plot to colony of source
+    let (timestamp) = get_block_timestamp()
+    world.write(target_x, target_y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=2))
 
     return ()
 end
