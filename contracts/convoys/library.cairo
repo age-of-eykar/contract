@@ -6,10 +6,12 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.bool import TRUE, FALSE
+from starkware.cairo.common.math import assert_le, assert_not_equal
+from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 
 struct ConvoyMeta:
     member owner : felt  # address
-    member arrival : felt  # date
+    member availability : felt  # date
     member size : felt
 end
 
@@ -113,14 +115,40 @@ func _get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 end
 
 #
+# Setters
+#
+@external
+func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
+) -> ():
+    # Moves the convoy to the location if caller is the owner
+    #
+    #   Parameters:
+    #       convoy_id (felt) : The convoy to move
+    #       source_x (felt) : The x coordinate of the source location
+    #       source_y (felt) : The y coordinate of the source location
+    #       target_x (felt) : The x coordinate of the target location
+    #       target_y (felt) : The y coordinate of the target location
+
+    let (meta) = convoy_meta.read(convoy_id)
+    let (caller) = get_caller_address()
+    assert meta.owner = caller
+    let (timestamp) = get_block_timestamp()
+    # assert meta.availability < timestamp (not just <=)
+    assert_le(meta.availability, timestamp)
+    assert_not_equal(meta.availability, timestamp)
+    return ()
+end
+
+#
 # Functions
 #
 func create_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    owner : felt, arrival : felt, conveyables_len : felt, conveyables : felt*
+    owner : felt, availability : felt, conveyables_len : felt, conveyables : felt*
 ) -> (convoy_id : felt):
     alloc_locals
     let (convoy_id) = _reserve_convoy_id()
-    let meta : ConvoyMeta = ConvoyMeta(owner=owner, arrival=arrival, size=conveyables_len)
+    let meta : ConvoyMeta = ConvoyMeta(owner=owner, availability=availability, size=conveyables_len)
     convoy_meta.write(convoy_id, meta)
     _write_conveyables(convoy_id, 0, conveyables_len, conveyables)
     return (convoy_id)
@@ -143,12 +171,42 @@ func bind_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     return ()
 end
 
-func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func unsafe_move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
 ) -> ():
-    # todo
-    # let (prev) = _find_previous_convoy(convoy_id, source_x, source_y)
+    # Moves the convoy from source to target
+    #
+    #   Parameters:
+    #       convoy_id (felt) : The convoy to move
+    #       source_x (felt) : The x coordinate of the source location
+    #       source_y (felt) : The y coordinate of the source location
+    #       target_x (felt) : The x coordinate of the target location
+    #       target_y (felt) : The y coordinate of the target location
+
+    alloc_locals
+    let (link : felt) = chained_convoys.read(source_x, source_y)
+    let (next) = next_chained_convoy.read(convoy_id)
+    # If the convoy is the first convoy in the list, we need to update the source location
+    if convoy_id == link:
+        chained_convoys.write(source_x, source_y, next)
+        # Else, we need to find the previous convoy and update its next
+    else:
+        # this will be an infinite loop if the convoy is not in the list
+        let (prev) = _find_previous_convoy(convoy_id, link, source_x, source_y)
+        next_chained_convoy.write(prev, next)
+    end
+    bind_convoy(convoy_id, target_x, target_y)
     return ()
+end
+
+func _find_previous_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, link : felt, x : felt, y : felt
+) -> (prev : felt):
+    let (next : felt) = next_chained_convoy.read(link)
+    if next == convoy_id:
+        return (link)
+    end
+    return _find_previous_convoy(convoy_id, next, x, y)
 end
 
 func _reserve_convoy_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (

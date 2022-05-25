@@ -6,7 +6,30 @@ import pytest
 from starkware.starknet.testing.starknet import Starknet
 
 # The path to the contract source code.
-CONTRACT_FILE = os.path.join("contracts", "convoys.cairo")
+CONTRACT_FILE = os.path.join("contracts", "convoys", "library.cairo")
+EYKAR_CONTRACT_FILE = os.path.join("contracts", "eykar.cairo")
+
+
+@pytest.mark.asyncio
+async def test_move():
+    """Mint a plot to get a first convoy"""
+
+    starknet = await Starknet.empty()
+    contract = await starknet.deploy(source=EYKAR_CONTRACT_FILE)
+
+    # First let's mint a plot and a new colony
+    execution_info = await contract.get_player_colonies(0).call()
+    assert execution_info.result == ([],)
+    player = 1
+    await contract.mint(123).invoke(caller_address=player)
+    execution_info = await contract.get_player_colonies(player).call()
+    assert execution_info.result[0] == [1]
+    execution_info = await contract.get_convoys(0, 0).call()
+    assert execution_info.result.convoys_id == [1]
+
+    # We now have convoy 1 located on (0, 0)
+    # Let's move it to (1, 0)
+    #await contract.move_convoy(1, 0, 0, 1, 0).invoke(caller_address=player)
 
 
 @pytest.mark.asyncio

@@ -247,7 +247,7 @@ func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     # Check if the convoy is arrived to the destination
     let (meta : ConvoyMeta) = convoy_meta.read(convoy_id)
     let (timestamp : felt) = get_block_timestamp()
-    assert_le(meta.arrival, timestamp)
+    assert_le(meta.availability, timestamp)
 
     # Check if the convoy belongs to that plot
     let (found) = contains_convoy(x, y, convoy_id)
@@ -262,16 +262,16 @@ end
 
 @external
 func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    target_x : felt, target_y : felt, source_x : felt, source_y : felt, convoy_id : felt
+    convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
 ):
     # Conquers a plot
     #
     # Parameters:
-    #     target_x (felt): The x coordinate of the plot to conquer
-    #     target_y (felt): The y coordinate of the plot to conquer
+    #     convoy_id (felt): The id of the convoy
     #     source_x (felt): The x coordinate of the plot to extend
     #     source_y (felt): The y coordinate of the plot to extend
-    #     convoy_id (felt): The id of the convoy
+    #     target_x (felt): The x coordinate of the plot to conquer
+    #     target_y (felt): The y coordinate of the plot to conquer
 
     alloc_locals
     # check target is in contact with source
