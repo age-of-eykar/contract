@@ -10,8 +10,8 @@ from starkware.cairo.common.alloc import alloc
 
 from contracts.coordinates import spiral, get_distance
 from contracts.colonies import Colony, colonies, get_colony, create_colony, redirect_colony
-from contracts.convoys import get_convoy_strength, contains_convoy, convoy_meta, ConvoyMeta
-from contracts.convoys_factory import create_mint_convoy
+from contracts.convoys.library import get_convoy_strength, contains_convoy, convoy_meta, ConvoyMeta
+from contracts.convoys.factory import create_mint_convoy
 
 #
 # World
@@ -294,14 +294,6 @@ func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     let (timestamp) = get_block_timestamp()
     world.write(target_x, target_y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=2))
     world_update.emit(target_x, target_y)
-    return ()
-end
-
-@external
-func merge_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x1 : felt, y1 : felt, x2 : felt, y2 : felt
-):
-    # Merges two colonies
     return ()
 end
 

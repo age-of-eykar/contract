@@ -5,7 +5,7 @@
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
-from contracts.convoys import _write_fungible_convoyable, create_convoy, bind_convoy
+from contracts.convoys.library import _write_fungible_convoyable, create_convoy, bind_convoy
 
 func create_mint_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     owner : felt, x : felt, y : felt
