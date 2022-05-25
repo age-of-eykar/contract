@@ -17,33 +17,24 @@ end
 # Getters
 #
 @view
-func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_id : felt
-) -> (conveyables_len : felt, conveyables : felt*):
-    alloc_locals
-    let (conveyables) = alloc()
-    let (meta) = convoy_meta.read(convoy_id)
-    if meta.size == 0:
-        return (meta.size, conveyables)
-    end
-
-    # Recursively add conveyable id from storage to the conveyables array
-    _get_conveyables(convoy_id, 0, meta.size, conveyables)
-    return (meta.size, conveyables)
+func get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt
+) -> (convoys_id_len : felt, convoys_id : felt*):
+    let (id) = chained_convoys.read(x, y)
+    return _get_convoys(x, y, id)
 end
 
-func _get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_id : felt, index : felt, convoy_size : felt, conveyables : felt*
-):
-    if index == convoy_size:
-        return ()
+func _get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt, convoy_id : felt
+) -> (convoys_id_len : felt, convoys_id : felt*):
+    if convoy_id == 0:
+        let (convoys_id) = alloc()
+        return (0, convoys_id)
     end
-
-    let (conveyable_id) = convoy_content.read(convoy_id, index)
-    assert conveyables[index] = conveyable_id
-
-    _get_conveyables(convoy_id, index + 1, convoy_size, conveyables)
-    return ()
+    let (next) = next_chained_convoy.read(convoy_id)
+    let (convoys_id_len, convoys_id) = _get_convoys(x, y, next)
+    assert convoys_id[convoys_id_len] = convoy_id
+    return (convoys_id_len + 1, convoys_id)
 end
 
 @view
@@ -73,7 +64,7 @@ func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 ) -> (strength : felt):
     alloc_locals
     let (conveyables_len : felt, conveyables : felt*) = get_conveyables(convoy_id)
-    #return _get_conveyables_strength(conveyables_len, conveyables)
+    # return _get_conveyables_strength(conveyables_len, conveyables)
     return (4)
 end
 
@@ -89,6 +80,36 @@ func _get_conveyables_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
         let (next_strength) = _get_conveyables_strength(conveyables_len - 1, conveyables + 1)
         return (conveyable_strength + next_strength)
     end
+end
+
+@view
+func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt
+) -> (conveyables_len : felt, conveyables : felt*):
+    alloc_locals
+    let (conveyables) = alloc()
+    let (meta) = convoy_meta.read(convoy_id)
+    if meta.size == 0:
+        return (meta.size, conveyables)
+    end
+
+    # Recursively add conveyable id from storage to the conveyables array
+    _get_conveyables(convoy_id, 0, meta.size, conveyables)
+    return (meta.size, conveyables)
+end
+
+func _get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, index : felt, convoy_size : felt, conveyables : felt*
+):
+    if index == convoy_size:
+        return ()
+    end
+
+    let (conveyable_id) = convoy_content.read(convoy_id, index)
+    assert conveyables[index] = conveyable_id
+
+    _get_conveyables(convoy_id, index + 1, convoy_size, conveyables)
+    return ()
 end
 
 #
@@ -119,6 +140,14 @@ func bind_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     let (link : felt) = chained_convoys.read(x, y)
     next_chained_convoy.write(convoy_id, link)
     chained_convoys.write(x, y, convoy_id)
+    return ()
+end
+
+func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
+) -> ():
+    # todo
+    #let (prev) = _find_previous_convoy(convoy_id, source_x, source_y)
     return ()
 end
 
