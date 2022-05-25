@@ -17,32 +17,32 @@ end
 # Getters
 #
 @view
-func get_convoyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt
-) -> (convoyables_len : felt, convoyables : felt*):
+) -> (conveyables_len : felt, conveyables : felt*):
     alloc_locals
-    let (convoyables) = alloc()
+    let (conveyables) = alloc()
     let (meta) = convoy_meta.read(convoy_id)
     if meta.size == 0:
-        return (meta.size, convoyables)
+        return (meta.size, conveyables)
     end
 
-    # Recursively add convoyable id from storage to the convoyables array
-    _get_convoyables(convoy_id, 0, meta.size, convoyables)
-    return (meta.size, convoyables)
+    # Recursively add conveyable id from storage to the conveyables array
+    _get_conveyables(convoy_id, 0, meta.size, conveyables)
+    return (meta.size, conveyables)
 end
 
-func _get_convoyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_id : felt, index : felt, convoy_size : felt, convoyables : felt*
+func _get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, index : felt, convoy_size : felt, conveyables : felt*
 ):
     if index == convoy_size:
         return ()
     end
 
-    let (convoyable_id) = convoy_content.read(convoy_id, index)
-    assert convoyables[index] = convoyable_id
+    let (conveyable_id) = convoy_content.read(convoy_id, index)
+    assert conveyables[index] = conveyable_id
 
-    _get_convoyables(convoy_id, index + 1, convoy_size, convoyables)
+    _get_conveyables(convoy_id, index + 1, convoy_size, conveyables)
     return ()
 end
 
@@ -72,22 +72,22 @@ func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     convoy_id : felt
 ) -> (strength : felt):
     alloc_locals
-    let (convoyables_len : felt, convoyables : felt*) = get_convoyables(convoy_id)
-    #return _get_convoyables_strength(convoyables_len, convoyables)
+    let (conveyables_len : felt, conveyables : felt*) = get_conveyables(convoy_id)
+    #return _get_conveyables_strength(conveyables_len, conveyables)
     return (4)
 end
 
-func _get_convoyables_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoyables_len : felt, convoyables : felt*
+func _get_conveyables_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    conveyables_len : felt, conveyables : felt*
 ) -> (strength : felt):
-    if convoyables_len == 0:
+    if conveyables_len == 0:
         return (0)
     else:
-        let convoyable_id = [convoyables]
+        let conveyable_id = [conveyables]
         alloc_locals
-        let (convoyable_strength) = _get_strength(convoyable_id)
-        let (next_strength) = _get_convoyables_strength(convoyables_len - 1, convoyables + 1)
-        return (convoyable_strength + next_strength)
+        let (conveyable_strength) = _get_strength(conveyable_id)
+        let (next_strength) = _get_conveyables_strength(conveyables_len - 1, conveyables + 1)
+        return (conveyable_strength + next_strength)
     end
 end
 
@@ -95,13 +95,13 @@ end
 # Functions
 #
 func create_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    owner : felt, arrival : felt, convoyables_len : felt, convoyables : felt*
+    owner : felt, arrival : felt, conveyables_len : felt, conveyables : felt*
 ) -> (convoy_id : felt):
     alloc_locals
     let (convoy_id) = _reserve_convoy_id()
-    let meta : ConvoyMeta = ConvoyMeta(owner=owner, arrival=arrival, size=convoyables_len)
+    let meta : ConvoyMeta = ConvoyMeta(owner=owner, arrival=arrival, size=conveyables_len)
     convoy_meta.write(convoy_id, meta)
-    _write_convoyables(convoy_id, 0, convoyables_len, convoyables)
+    _write_conveyables(convoy_id, 0, conveyables_len, conveyables)
     return (convoy_id)
 end
 
@@ -131,41 +131,41 @@ func _reserve_convoy_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     return (convoy_id)
 end
 
-func _write_convoyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_id : felt, index : felt, convoyables_len : felt, convoyables : felt*
+func _write_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, index : felt, conveyables_len : felt, conveyables : felt*
 ) -> ():
-    # Write a convoyable array to a convoy
+    # Write a conveyable array to a convoy
     #
     #   Parameters:
     #       convoy_id (felt): The id of the convoy to write to
     #       index (felt): The index to start with (usually 0)
-    #       convoyables_len (felt): The length of the convoyables array
-    #       convoyables (felt*): The array of convoyables to write
+    #       conveyables_len (felt): The length of the conveyables array
+    #       conveyables (felt*): The array of conveyables to write
     #
-    if convoyables_len == index:
+    if conveyables_len == index:
         return ()
     end
-    convoy_content.write(convoy_id, index, convoyables[index])
-    _write_convoyables(convoy_id, index + 1, convoyables_len, convoyables)
+    convoy_content.write(convoy_id, index, conveyables[index])
+    _write_conveyables(convoy_id, index + 1, conveyables_len, conveyables)
     return ()
 end
 
-func _reserve_convoyable_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    ) -> (convoyable_id : felt):
+func _reserve_conveyable_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    ) -> (conveyable_id : felt):
     alloc_locals
-    let (convoyable_id) = free_convoyable_id.read()
-    free_convoyable_id.write(convoyable_id + 1)
-    return (convoyable_id)
+    let (conveyable_id) = free_conveyable_id.read()
+    free_conveyable_id.write(conveyable_id + 1)
+    return (conveyable_id)
 end
 
-func _write_fungible_convoyable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func _write_fungible_conveyable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     type : felt, amount : felt
-) -> (convoyable_id : felt):
+) -> (conveyable_id : felt):
     alloc_locals
-    let (convoyable_id) = _reserve_convoyable_id()
-    convoyable_type.write(convoyable_id, type)
-    convoyable_fungible_amount.write(convoyable_id, amount)
-    return (convoyable_id)
+    let (conveyable_id) = _reserve_conveyable_id()
+    conveyable_type.write(conveyable_id, type)
+    conveyable_fungible_amount.write(conveyable_id, amount)
+    return (conveyable_id)
 end
 
 #
@@ -183,7 +183,7 @@ func convoy_meta(convoy_id : felt) -> (meta : ConvoyMeta):
 end
 
 @storage_var
-func convoy_content(convoy_id : felt, index : felt) -> (convoyable_id : felt):
+func convoy_content(convoy_id : felt, index : felt) -> (conveyable_id : felt):
 end
 
 @storage_var
@@ -194,18 +194,18 @@ end
 func next_chained_convoy(convoy_id : felt) -> (next_convoy_id : felt):
 end
 
-# convoyables
+# conveyables
 
 @storage_var
-func free_convoyable_id() -> (convoyable_id : felt):
+func free_conveyable_id() -> (conveyable_id : felt):
 end
 
 @storage_var
-func convoyable_type(convoyable_id) -> (convoyable_type : felt):
+func conveyable_type(conveyable_id) -> (conveyable_type : felt):
 end
 
 @storage_var
-func convoyable_fungible_amount(convoyable_id) -> (amount : felt):
+func conveyable_fungible_amount(conveyable_id) -> (amount : felt):
 end
 
 #
@@ -213,11 +213,11 @@ end
 #
 
 @view
-func _get_movability(convoyable_type : felt) -> (movability : felt):
-    # Returns the moving capacity of a convoyable
-    # this can be negative (eg if the convoyable is a content and not a container)
+func _get_movability(conveyable_type : felt) -> (movability : felt):
+    # Returns the moving capacity of a conveyable
+    # this can be negative (eg if the conveyable is a content and not a container)
     let (data_address) = get_label_location(movabilities)
-    return (cast(data_address, felt*)[convoyable_type])
+    return (cast(data_address, felt*)[conveyable_type])
 
     movabilities:
     dw 1  # human
@@ -227,11 +227,11 @@ func _get_movability(convoyable_type : felt) -> (movability : felt):
 end
 
 @view
-func _get_speed(convoyable_type : felt) -> (movability : felt):
-    # Returns the speed of a convoyable
-    # -1 if the convoyable is not a vehicle
+func _get_speed(conveyable_type : felt) -> (movability : felt):
+    # Returns the speed of a conveyable
+    # -1 if the conveyable is not a vehicle
     let (data_address) = get_label_location(speed)
-    return (cast(data_address, felt*)[convoyable_type])
+    return (cast(data_address, felt*)[conveyable_type])
 
     speed:
     dw 1  # human
@@ -241,11 +241,11 @@ func _get_speed(convoyable_type : felt) -> (movability : felt):
 end
 
 @view
-func _get_strength(convoyable_type : felt) -> (movability : felt):
-    # Returns the strength of a convoyable
-    # 0 if the convoyable doesn't have strength
+func _get_strength(conveyable_type : felt) -> (movability : felt):
+    # Returns the strength of a conveyable
+    # 0 if the conveyable doesn't have strength
     let (data_address) = get_label_location(food)
-    return (cast(data_address, felt*)[convoyable_type])
+    return (cast(data_address, felt*)[conveyable_type])
 
     food:
     dw 1  # human
@@ -255,11 +255,11 @@ func _get_strength(convoyable_type : felt) -> (movability : felt):
 end
 
 @view
-func _get_protection(convoyable_type : felt) -> (movability : felt):
-    # Returns the protection of a convoyable
-    # 0 if the convoyable doesn't provide protection
+func _get_protection(conveyable_type : felt) -> (movability : felt):
+    # Returns the protection of a conveyable
+    # 0 if the conveyable doesn't provide protection
     let (data_address) = get_label_location(food)
-    return (cast(data_address, felt*)[convoyable_type])
+    return (cast(data_address, felt*)[conveyable_type])
 
     food:
     dw 1  # human
