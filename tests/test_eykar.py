@@ -24,6 +24,8 @@ async def test_mint_plot():
     await contract.mint(456).invoke(caller_address=player)
     execution_info = await contract.get_player_colonies(player).call()
     assert execution_info.result[0] == [1, 2]
+    execution_info = await contract.get_convoys(0, 0).call()
+    assert execution_info.result.convoys_id == [1]
 
 
 @pytest.mark.asyncio
@@ -42,8 +44,11 @@ async def test_extend():
     await contract.mint(123).invoke(caller_address=player)
     execution_info = await contract.get_player_colonies(player).call()
     assert execution_info.result[0] == [1]
-    await contract.extend(0, 1, 0, 0, 0).invoke(caller_address=player)
-    execution_info = await contract.get_plot(0, 1).call()
-    plot = execution_info.result.plot
-    assert plot.owner == 1
-    assert plot.structure == 2
+    execution_info = await contract.get_convoys(0, 0).call()
+    assert execution_info.result.convoys_id == [1]
+    # todo: move convoy
+    # await contract.extend(0, 1, 0, 0, 1).invoke(caller_address=player)
+    # execution_info = await contract.get_plot(0, 1).call()
+    # plot = execution_info.result.plot
+    # assert plot.owner == 1
+    # assert plot.structure == 2

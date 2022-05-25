@@ -147,7 +147,7 @@ func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
 ) -> ():
     # todo
-    #let (prev) = _find_previous_convoy(convoy_id, source_x, source_y)
+    # let (prev) = _find_previous_convoy(convoy_id, source_x, source_y)
     return ()
 end
 
@@ -157,7 +157,7 @@ func _reserve_convoy_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     alloc_locals
     let (convoy_id) = free_convoy_id.read()
     free_convoy_id.write(convoy_id + 1)
-    return (convoy_id)
+    return (convoy_id + 1)
 end
 
 func _write_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
