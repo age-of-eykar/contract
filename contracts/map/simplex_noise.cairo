@@ -5,7 +5,7 @@ from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.math_cmp import is_le, is_nn
 from starkware.cairo.common.math import signed_div_rem, unsigned_div_rem
 
-from contracts.map.szudzik import lgc, szudzik
+from contracts.map.szudzik import lcg, szudzik
 from contracts.map.fixed_point_numbers import (
     Math64x61_fromFelt as from_felt,
     Math64x61_toFelt as to_felt,
@@ -97,7 +97,7 @@ func random_szudzik{range_check_ptr}(x: felt, y: felt, modulo: felt) -> (res: fe
     let (x_felt) = to_felt(x)
     let (y_felt) = to_felt(y)
     let (temp) = szudzik(x_felt, y_felt)
-    let (random) = lgc(temp, 2)
+    let (random) = lcg(temp, 2)
     let (_, res) = unsigned_div_rem(random, modulo)
     return (res)
 end

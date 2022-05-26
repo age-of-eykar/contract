@@ -1,14 +1,39 @@
 %lang starknet
 
-from contracts.map.szudzik import szudzik, lgc #, reversed_szudzik
-
-func random_szudzik{range_check_ptr}(x: felt, y: felt, loop: felt) -> (res: felt):
-    let (temp) = szudzik(x, y)
-    return lgc(temp, loop)
-end
+from contracts.map.szudzik import szudzik, lcg #, reversed_szudzik
 
 @view
 func test_szudzik{range_check_ptr}():
+    let (temp) = szudzik(2, 4)
+    assert temp = 68
+
+    let (temp) = szudzik(-45, 9765)
+    assert temp = 381420989
+
+    return ()
+end
+
+@view
+func test_lcg{range_check_ptr}():
+    let (temp) = lcg(45238, 1)
+    assert temp = 825810615
+
+    let (temp) = lcg(825810615, 1)
+    assert temp = 546901600
+
+    let (temp) = lcg(34, 4)
+    assert temp = 624590873
+
+    return ()
+end
+
+func random_szudzik{range_check_ptr}(x: felt, y: felt, loop: felt) -> (res: felt):
+    let (temp) = szudzik(x, y)
+    return lcg(temp, loop)
+end
+
+@view
+func test_szudzik_lcg{range_check_ptr}():
     alloc_locals
 
     let (szudzik1) = random_szudzik(0, 0, 2)
@@ -17,9 +42,9 @@ func test_szudzik{range_check_ptr}():
     let (szudzik4) = random_szudzik(3618502788666131213697322783095070105623107215331596699973092056135871341988, 3618502788666131213697322783095070105623107215331596699973092056135862020482, 1)
 
     assert szudzik1 = 896570056
-    assert szudzik2 = 813385950
-    assert szudzik3 = 655740424
-    assert szudzik4 = 839877197
+    assert szudzik2 = 813386054
+    assert szudzik3 = 655740438
+    assert szudzik4 = 844091168
 
     return ()
 end
