@@ -130,3 +130,26 @@ func test_unsafe_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr 
     assert test = TRUE
     return ()
 end
+
+@view
+func test_move_convoy_fail{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    %{ stop_prank_callable = start_prank(123) %}
+    let (convoy_id) = create_mint_convoy(123, 0, 0)
+    %{ expect_revert("TRANSACTION_FAILED") %}
+    move_convoy(convoy_id, 0, 0, -10, 27)
+    %{ stop_prank_callable() %}
+    return ()
+end
+
+@view
+func test_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    %{ 
+    stop_prank_callable = start_prank(123)
+    warp(0)
+    %}
+    let (convoy_id) = create_mint_convoy(123, 0, 0)
+    %{ warp(1) %}
+    move_convoy(convoy_id, 0, 0, -10, 27)
+    %{ stop_prank_callable() %}
+    return ()
+end
