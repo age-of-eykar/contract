@@ -90,45 +90,43 @@ end
 func _player_colonies_storage(player : felt, index : felt) -> (colony_id : felt):
 end
 
-@storage_var
-func _player_colonies_len(player : felt) -> (colonies_length : felt):
-end
-
 func _get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    player : felt, colonies_index : felt, colonies_len : felt, colonies : felt*
-):
-    if colonies_index == colonies_len:
-        return ()
+    player : felt, colonies_index : felt
+) -> (colonies_len : felt, colonies : felt*):
+    alloc_locals
+    let (colony) = _player_colonies_storage.read(player, colonies_index)
+    if colony == 0:
+        let (colonies) = alloc()
+        return (0, colonies)
     end
 
-    let (colony) = _player_colonies_storage.read(player, colonies_index)
+    let (colonies_len, colonies) = _get_player_colonies(player, colonies_index + 1)
     assert colonies[colonies_index] = colony
-
-    _get_player_colonies(player, colonies_index + 1, colonies_len, colonies)
-    return ()
+    return (colonies_len + 1, colonies)
 end
 
 @view
 func get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     player : felt
 ) -> (colonies_len : felt, colonies : felt*):
-    alloc_locals
-    let (colonies) = alloc()
-    let (colonies_len) = _player_colonies_len.read(player)
-    if colonies_len == 0:
-        return (colonies_len, colonies)
-    end
+    return _get_player_colonies(player, 0)
+end
 
-    # Recursively add colonies id from storage to the colonies array
-    _get_player_colonies(player, 0, colonies_len, colonies)
-    return (colonies_len, colonies)
+func _colonies_amount{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    player : felt, colonies_index : felt
+) -> (amount : felt):
+    let (colony) = _player_colonies_storage.read(player, colonies_index)
+    if colony == 0:
+        return (0)
+    end
+    let (remaining) = _colonies_amount(player, colonies_index + 1)
+    return (1 + remaining)
 end
 
 func add_colony_to_player{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     player : felt, colony_id : felt
 ) -> ():
-    let (id) = _player_colonies_len.read(player)
-    _player_colonies_len.write(player, id + 1)
+    let (id) = _colonies_amount(player, 0)
     _player_colonies_storage.write(player, id, colony_id)
     return ()
 end

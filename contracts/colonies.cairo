@@ -18,7 +18,8 @@ end
 
 @view
 func get_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(id : felt) -> (
-        colony : Colony):
+    colony : Colony
+):
     # Gets the colony object after multiple redirections
     #
     #   Parameters:
@@ -35,16 +36,17 @@ func get_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
 end
 
 func create_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        name : felt, owner : felt, x : felt, y : felt) -> (colony : Colony):
+    name : felt, owner : felt, x : felt, y : felt
+) -> (colony : Colony):
     let (id) = _find_available_colony_id(1)
-    let colony = Colony(
-        name, owner, x, y, plots_amount=0, redirection=id)
+    let colony = Colony(name, owner, x, y, plots_amount=0, redirection=id)
     colonies.write(id - 1, colony)
     return (colony)
 end
 
 func redirect_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        id : felt, new_id : felt) -> ():
+    id : felt, new_id : felt
+) -> ():
     alloc_locals
     let (old_colony) = get_colony(id)
     let (new_colony) = get_colony(new_id)
@@ -53,17 +55,20 @@ func redirect_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
         Colony(
         old_colony.name, old_colony.owner, old_colony.x, old_colony.y,
         plots_amount=old_colony.plots_amount,
-        redirection=new_colony.redirection))
+        redirection=new_colony.redirection),
+    )
     colonies.write(
         new_id - 1,
         Colony(new_colony.name, new_colony.owner, new_colony.x, new_colony.y,
         plots_amount=old_colony.plots_amount + new_colony.plots_amount,
-        redirection=old_colony.redirection))
+        redirection=old_colony.redirection),
+    )
     return ()
 end
 
 func _find_available_colony_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        start : felt) -> (id : felt):
+    start : felt
+) -> (id : felt):
     let (colony) = colonies.read(start - 1)
     if colony.owner == 0:
         if start == 1:
@@ -76,8 +81,8 @@ func _find_available_colony_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
 end
 
 func _find_available_colony_id_dichotomia{
-        syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        start : felt, last : felt) -> (id : felt):
+    syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
+}(start : felt, last : felt) -> (id : felt):
     if start == last:
         return (start)
     else:
@@ -86,7 +91,7 @@ func _find_available_colony_id_dichotomia{
         if colony.owner == 0:
             return _find_available_colony_id_dichotomia(start, id)
         else:
-            return _find_available_colony_id_dichotomia(id+1, last)
+            return _find_available_colony_id_dichotomia(id + 1, last)
         end
     end
 end

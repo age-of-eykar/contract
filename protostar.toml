@@ -1,0 +1,11 @@
+["protostar.config"]
+protostar_version = "0.2.1"
+
+["protostar.project"]
+libs_path = "lib"
+
+["protostar.contracts"]
+eykar = ["./contracts/eykar.cairo"]
+
+["protostar.shared_command_configs"]
+cairo_path = ["./"]
