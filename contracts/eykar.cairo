@@ -10,7 +10,7 @@ from starkware.cairo.common.alloc import alloc
 
 from contracts.coordinates import spiral, get_distance
 from contracts.colonies import Colony, colonies, get_colony, create_colony, redirect_colony
-from contracts.convoys.library import get_convoy_strength, contains_convoy, convoy_meta, ConvoyMeta
+from contracts.convoys.library import get_convoy_strength, convoy_can_access, convoy_meta, ConvoyMeta
 from contracts.convoys.factory import create_mint_convoy
 
 #
@@ -227,9 +227,9 @@ func mint{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(nam
 end
 
 func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x : felt, y : felt, convoy_id : felt, required_strength : felt
+    x : felt, y : felt, convoy_id : felt, required_strength : felt, caller: felt
 ) -> ():
-    # Asserts that the plot is conquerable
+    # Asserts that the plot is conquerable by caller
     #
     # Parameters:
     #     x (felt): The x coordinate of the plot
@@ -242,13 +242,16 @@ func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     let (plot : Plot) = world.read(x, y)
     assert plot.owner = 0
 
+    # check caller is convoy owner
+    let meta : ConvoyMeta = convoy_meta.read(convoy_id)
+    assert meta.owner = caller
+
     # Check if the convoy is arrived to the destination
-    let (meta : ConvoyMeta) = convoy_meta.read(convoy_id)
     let (timestamp : felt) = get_block_timestamp()
     assert_le(meta.availability, timestamp)
 
     # Check if the convoy belongs to that plot
-    let (found) = contains_convoy(x, y, convoy_id)
+    let (found) = convoy_can_access(convoy_id, x, y)
     assert found = TRUE
 
     # Get convoy strength
@@ -262,7 +265,7 @@ end
 func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
 ):
-    # Conquers a plot
+    # Extends a colony using a convoy at destination
     #
     # Parameters:
     #     convoy_id (felt): The id of the convoy
@@ -275,12 +278,10 @@ func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     # check target is in contact with source
     assert_in_contact(target_x, target_y, source_x, source_y)
 
-    # check caller is convoy owner
-    let meta : ConvoyMeta = convoy_meta.read(convoy_id)
-    let (caller : felt) = get_caller_address()
-    assert meta.owner = caller
+    let (caller) = get_caller_address()
+
     # check plot is conquerable
-    assert_conquerable(target_x, target_y, convoy_id, 3)
+    assert_conquerable(target_x, target_y, convoy_id, 3, caller)
 
     # assert user owns source plot colony
     let (plot : Plot) = world.read(source_x, source_y)

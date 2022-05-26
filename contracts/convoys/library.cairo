@@ -80,6 +80,40 @@ func _contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 end
 
 @view
+func convoy_can_access{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt
+) -> (bool : felt):
+    # Checks if a convoy can access a location [tested: test_convoy_can_access]
+    #
+    #   Parameters:
+    #       convoy_id : convoy_id
+    #       x : x coordinate of the location
+    #       y : y coordinate of the location
+    #
+    #   Returns:
+    #       bool : TRUE if the convoy can access the location, FALSE otherwise
+    return _convoy_can_access(convoy_id, x, y, 2, 2)
+end
+
+func _convoy_can_access{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt, x_index : felt, y_index : felt
+) -> (bool : felt):
+    let (current) = contains_convoy(x + x_index, y + y_index, convoy_id)
+    if current == TRUE:
+        return (TRUE)
+    end
+
+    if y_index == -1:
+        if x_index == -1:
+            return (FALSE)
+        end
+        return _convoy_can_access(convoy_id, x, y, x_index - 1, 2)
+    end
+
+    return _convoy_can_access(convoy_id, x, y, x_index, y_index - 1)
+end
+
+@view
 func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt
 ) -> (strength : felt):
@@ -292,7 +326,7 @@ func _reserve_conveyable_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ra
     alloc_locals
     let (conveyable_id) = free_conveyable_id.read()
     free_conveyable_id.write(conveyable_id + 1)
-    return (conveyable_id+1)
+    return (conveyable_id + 1)
 end
 
 func _write_fungible_conveyable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(

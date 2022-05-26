@@ -7,6 +7,7 @@ from contracts.convoys.factory import create_mint_convoy
 from contracts.convoys.library import (
     get_convoys,
     contains_convoy,
+    convoy_can_access,
     get_convoy_strength,
     get_conveyables,
     create_convoy,
@@ -56,12 +57,28 @@ func test_contains_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
 end
 
 @view
+func test_convoy_can_access{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
+    let (convoy_id) = create_mint_convoy(123, 17, -34)
+    let (test) = convoy_can_access(convoy_id, 17, -34)
+    assert test = TRUE
+    let (test) = convoy_can_access(convoy_id, 18, -35)
+    assert test = TRUE
+    let (test) = convoy_can_access(convoy_id, 24, -35)
+    assert test = FALSE
+    let (test) = convoy_can_access(convoy_id, -220, 3555)
+    assert test = FALSE
+    let (test) = convoy_can_access(convoy_id, 16, -33)
+    assert test = TRUE
+    return ()
+end
+
+@view
 func test_get_convoy_strength{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
     let (convoy_id) = create_mint_convoy(123, 2, -3)
     let (strength) = get_convoy_strength(convoy_id)
     assert strength = 10
-
     return ()
 end
 
