@@ -3,7 +3,6 @@
 from starkware.cairo.common.math import sqrt, unsigned_div_rem
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 
-@view
 func get_distance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         xmin : felt, ymin : felt, xmax : felt, ymax : felt) -> (distance : felt):
     # Calculate an approximated ineteger distance between two Cartesian coordinates
@@ -18,11 +17,10 @@ func get_distance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     #       distance (felt): Estimated distance between the two points
     let x_distance = xmax - xmin
     let y_distance = ymax - ymin
-    let (distance) = sqrt(x_distance * x_distance + y_distance * y_distance)
+    let (distance) = sqrt(x_distance *  x_distance + y_distance * y_distance)
     return (distance)
 end
 
-@view
 func spiral{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         n : felt, spacing : felt) -> (x : felt, y : felt):
     if n == 0:

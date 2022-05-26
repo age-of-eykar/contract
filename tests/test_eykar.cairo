@@ -1,7 +1,8 @@
 %lang starknet
-from contracts.eykar import mint, get_player_colonies, current_registration_id, get_colony
+
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_caller_address
+from contracts.eykar import mint, get_player_colonies, current_registration_id, get_colony
 
 @view
 func test_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():

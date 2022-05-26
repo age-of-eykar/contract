@@ -22,6 +22,16 @@ end
 func get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     x : felt, y : felt
 ) -> (convoys_id_len : felt, convoys_id : felt*):
+    # Gets convoys located at a given location [tested: test_create_mint]
+    #
+    #   Parameters:
+    #       x : x coordinate of the location
+    #       y : y coordinate of the location
+    #
+    #   Returns:
+    #       convoys_id_len : length of the convoys_id array
+    #       convoys_id : array of convoys_id
+
     let (id) = chained_convoys.read(x, y)
     return _get_convoys(x, y, id)
 end
@@ -43,6 +53,15 @@ end
 func contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     x : felt, y : felt, convoy_id : felt
 ) -> (contained : felt):
+    # Checks if a convoy is located at a given location [tested: test_contains_convoy]
+    #
+    #   Parameters:
+    #       x : x coordinate of the location
+    #       y : y coordinate of the location
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       contained : TRUE if the convoy is located at the location, FALSE otherwise
     let (found_id) = chained_convoys.read(x, y)
     return _contains_convoy(found_id, convoy_id)
 end
@@ -64,10 +83,15 @@ end
 func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt
 ) -> (strength : felt):
-    alloc_locals
+    # Gets the strength of a convoy [tested: test_get_convoy_strength]
+    #
+    #   Parameters:
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       strength : strength of the convoy
     let (conveyables_len : felt, conveyables : felt*) = get_conveyables(convoy_id)
-    # return _get_conveyables_strength(conveyables_len, conveyables)
-    return (4)
+    return _get_conveyables_strength(conveyables_len, conveyables)
 end
 
 func _get_conveyables_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -78,9 +102,17 @@ func _get_conveyables_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*,
     else:
         let conveyable_id = [conveyables]
         alloc_locals
-        let (conveyable_strength) = _get_strength(conveyable_id)
+        let (type) = conveyable_type.read(conveyable_id)
+        let (fungible) = _is_fungible(type)
+        let (conveyable_strength) = _get_strength(type)
         let (next_strength) = _get_conveyables_strength(conveyables_len - 1, conveyables + 1)
-        return (conveyable_strength + next_strength)
+        if fungible == TRUE:
+            let (amount) = conveyable_fungible_amount.read(conveyable_id)
+            return (amount * conveyable_strength + next_strength)
+        else:
+            # TODO: non-fungible conveyables might have some specific strength
+            return (conveyable_strength + next_strength)
+        end
     end
 end
 
@@ -88,6 +120,14 @@ end
 func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt
 ) -> (conveyables_len : felt, conveyables : felt*):
+    # Gets the conveyables of a convoy [tested: test_get_conveyables]
+    #
+    #   Parameters:
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       conveyables_len : length of the conveyables array
+    #       conveyables : array of conveyable_id
     alloc_locals
     let (conveyables) = alloc()
     let (meta) = convoy_meta.read(convoy_id)
@@ -146,6 +186,16 @@ end
 func create_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     owner : felt, availability : felt, conveyables_len : felt, conveyables : felt*
 ) -> (convoy_id : felt):
+    # Creates a convoy [tested: test_create_convoy]
+    #
+    #   Parameters:
+    #       owner (felt) : The owner of the convoy
+    #       availability (felt) : The timestamp when the convoy is available
+    #       conveyables_len (felt) : The length of the conveyables array
+    #       conveyables (felt*) : The array of conveyable_id
+    #
+    #   Returns:
+    #       convoy_id (felt) : The convoy_id of the created convoy
     alloc_locals
     let (convoy_id) = _reserve_convoy_id()
     let meta : ConvoyMeta = ConvoyMeta(owner=owner, availability=availability, size=conveyables_len)
@@ -157,7 +207,7 @@ end
 func bind_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, x : felt, y : felt
 ) -> ():
-    # Binds the convoy to the location
+    # Binds the convoy to the location [tested: test_bind_convoy]
     # If the location is already bound, it will be chained
     #
     #   Parameters:
@@ -174,7 +224,7 @@ end
 func unsafe_move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
 ) -> ():
-    # Moves the convoy from source to target
+    # Moves the convoy from source to target [tested: test_unsafe_move_convoy]
     #
     #   Parameters:
     #       convoy_id (felt) : The convoy to move
@@ -242,7 +292,7 @@ func _reserve_conveyable_id{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ra
     alloc_locals
     let (conveyable_id) = free_conveyable_id.read()
     free_conveyable_id.write(conveyable_id + 1)
-    return (conveyable_id)
+    return (conveyable_id+1)
 end
 
 func _write_fungible_conveyable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -298,6 +348,19 @@ end
 #
 # Hardcoded
 #
+
+@view
+func _is_fungible(conveyable_type : felt) -> (fungible : felt):
+    # Returns TRUE if a convoyable type is fungible
+    let (data_address) = get_label_location(fungibles)
+    return (cast(data_address, felt*)[conveyable_type])
+
+    fungibles:
+    dw TRUE  # human
+    dw TRUE  # food
+    dw TRUE  # horse
+    dw TRUE  # horseman
+end
 
 @view
 func _get_movability(conveyable_type : felt) -> (movability : felt):
