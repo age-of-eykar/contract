@@ -13,6 +13,8 @@ from contracts.colonies import Colony, colonies, get_colony, create_colony, redi
 from contracts.convoys.library import (
     get_convoy_strength,
     convoy_can_access,
+    contains_convoy,
+    unsafe_move_convoy,
     convoy_meta,
     ConvoyMeta,
 )
@@ -242,7 +244,7 @@ func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     #     required_strength (felt): The required strength
     #
 
-    # Check if the plot is already owned
+    # Ensure the plot is not already owned
     let (plot : Plot) = world.read(x, y)
     assert plot.owner = 0
 
@@ -250,15 +252,11 @@ func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     let meta : ConvoyMeta = convoy_meta.read(convoy_id)
     assert meta.owner = caller
 
-    # Check if the convoy is arrived to the destination
+    # Check if the convoy is ready to be used
     let (timestamp : felt) = get_block_timestamp()
     assert_le(meta.availability, timestamp)
 
-    # Check if the convoy belongs to that plot
-    let (found) = convoy_can_access(convoy_id, x, y)
-    assert found = TRUE
-
-    # Get convoy strength
+    # Check convoy strength is enough
     let (strength : felt) = get_convoy_strength(convoy_id)
     assert_le(required_strength, strength)
 
@@ -279,10 +277,12 @@ func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     #     target_y (felt): The y coordinate of the plot to conquer
 
     alloc_locals
-    # check target is in contact with source
-    assert_in_contact(target_x, target_y, source_x, source_y)
 
     let (caller) = get_caller_address()
+
+    # Check if the convoy is near the target
+    let (found) = convoy_can_access(convoy_id, target_x, target_y)
+    assert found = TRUE
 
     # check plot is conquerable
     assert_conquerable(convoy_id, target_x, target_y, 3, caller)
@@ -293,6 +293,9 @@ func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     let (colony : Colony) = colonies.read(colony_id - 1)
     assert colony.owner = caller
 
+    # move convoy from source to target (ensures the convoy is really on source)
+    unsafe_move_convoy(convoy_id, source_x, source_y, target_x, target_y)
+
     # add plot to colony of source
     let (timestamp) = get_block_timestamp()
     world.write(target_x, target_y, Plot(owner=colony_id, structure=2))
@@ -302,8 +305,36 @@ end
 
 @external
 func settle{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x : felt, y : felt, convoy_id : felt
+    convoy_id : felt, x : felt, y : felt, name : felt
 ):
-    # Create a new colony
+    # Conquers a plot using a convoy and create a new colony (or add the plot to an existing one)
+    #
+    # Parameters:
+    #     convoy_id (felt): The id of the convoy
+    #     x (felt): The x coordinate of the plot to conquer
+    #     y (felt): The y coordinate of the plot to conquer
+    #     name (felt): The name of the colony
+
+    alloc_locals
+    let (player) = get_caller_address()
+
+    # check convoy is on this plot
+    let (test) = contains_convoy(convoy_id, x, y)
+    assert test = TRUE
+
+    # check plot is conquerable
+    assert_conquerable(convoy_id, x, y, 3, player)
+
+    # create a new colony or add this plot to an existing colony
+    let (colony_id) = merge(player, x, y)
+    let (timestamp) = get_block_timestamp()
+    if colony_id == 0:
+        let (colony) = create_colony(name, player, x, y)
+        add_colony_to_player(player, colony.redirection)
+        world.write(x, y, Plot(owner=colony.redirection, structure=1))
+    else:
+        world.write(x, y, Plot(owner=colony_id, structure=1))
+    end
+    world_update.emit(x, y)
     return ()
 end

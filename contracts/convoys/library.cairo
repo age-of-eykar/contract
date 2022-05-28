@@ -211,6 +211,7 @@ func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     # assert meta.availability < timestamp (not just <=)
     assert_le(meta.availability, timestamp)
     assert_not_equal(meta.availability, timestamp)
+    unsafe_move_convoy(convoy_id, source_x, source_y, target_x, target_y)
     return ()
 end
 
