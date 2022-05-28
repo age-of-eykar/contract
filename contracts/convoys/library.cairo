@@ -280,6 +280,7 @@ func unsafe_move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
         let (prev) = _find_previous_convoy(convoy_id, link, source_x, source_y)
         next_chained_convoy.write(prev, next)
     end
+    # TODO: update the convoy_meta availability
     bind_convoy(convoy_id, target_x, target_y)
     return ()
 end
