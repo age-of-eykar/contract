@@ -33,25 +33,25 @@ func get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     #       convoys_id : array of convoys_id
 
     let (id) = chained_convoys.read(x, y)
-    return _get_convoys(x, y, id)
+    return _get_next_convoys(id, x, y)
 end
 
-func _get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x : felt, y : felt, convoy_id : felt
+func _get_next_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt
 ) -> (convoys_id_len : felt, convoys_id : felt*):
     if convoy_id == 0:
         let (convoys_id) = alloc()
         return (0, convoys_id)
     end
     let (next) = next_chained_convoy.read(convoy_id)
-    let (convoys_id_len, convoys_id) = _get_convoys(x, y, next)
+    let (convoys_id_len, convoys_id) = _get_next_convoys(next, x, y)
     assert convoys_id[convoys_id_len] = convoy_id
     return (convoys_id_len + 1, convoys_id)
 end
 
 @view
 func contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x : felt, y : felt, convoy_id : felt
+    convoy_id : felt, x : felt, y : felt
 ) -> (contained : felt):
     # Checks if a convoy is located at a given location [tested: test_contains_convoy]
     #
@@ -98,7 +98,7 @@ end
 func _convoy_can_access{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, x : felt, y : felt, x_index : felt, y_index : felt
 ) -> (bool : felt):
-    let (current) = contains_convoy(x + x_index, y + y_index, convoy_id)
+    let (current) = contains_convoy(convoy_id, x + x_index, y + y_index)
     if current == TRUE:
         return (TRUE)
     end

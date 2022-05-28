@@ -10,7 +10,12 @@ from starkware.cairo.common.alloc import alloc
 
 from contracts.coordinates import spiral, get_distance
 from contracts.colonies import Colony, colonies, get_colony, create_colony, redirect_colony
-from contracts.convoys.library import get_convoy_strength, convoy_can_access, convoy_meta, ConvoyMeta
+from contracts.convoys.library import (
+    get_convoy_strength,
+    convoy_can_access,
+    convoy_meta,
+    ConvoyMeta,
+)
 from contracts.convoys.factory import create_mint_convoy
 
 #
@@ -227,14 +232,14 @@ func mint{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(nam
 end
 
 func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x : felt, y : felt, convoy_id : felt, required_strength : felt, caller: felt
+    convoy_id : felt, x : felt, y : felt, required_strength : felt, caller : felt
 ) -> ():
     # Asserts that the plot is conquerable by caller
     #
     # Parameters:
+    #     convoy_id (felt): The id of the convoy
     #     x (felt): The x coordinate of the plot
     #     y (felt): The y coordinate of the plot
-    #     convoy_id (felt): The id of the convoy
     #     required_strength (felt): The required strength
     #
 
@@ -281,7 +286,7 @@ func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     let (caller) = get_caller_address()
 
     # check plot is conquerable
-    assert_conquerable(target_x, target_y, convoy_id, 3, caller)
+    assert_conquerable(convoy_id, target_x, target_y, 3, caller)
 
     # assert user owns source plot colony
     let (plot : Plot) = world.read(source_x, source_y)

@@ -44,13 +44,13 @@ func test_contains_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     let (convoys_len, convoys) = get_convoys(1, 0)
     assert convoys_len = 0
 
-    let (test) = contains_convoy(1, 0, convoy_id_1)
+    let (test) = contains_convoy(convoy_id_1, 1, 0)
     assert test = FALSE
-    let (test) = contains_convoy(1, -3, convoy_id_1)
+    let (test) = contains_convoy(convoy_id_1, 1, -3)
     assert test = TRUE
-    let (test) = contains_convoy(1, -3, convoy_id_2)
+    let (test) = contains_convoy(convoy_id_2, 1, -3)
     assert test = FALSE
-    let (test) = contains_convoy(1, -3, convoy_id_3)
+    let (test) = contains_convoy(convoy_id_3, 1, -3)
     assert test = TRUE
 
     return ()
@@ -141,9 +141,9 @@ func test_unsafe_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr 
     let (convoy_id) = create_mint_convoy(123, 0, 0)
     unsafe_move_convoy(convoy_id, 0, 0, -10, 27)
 
-    let (test) = contains_convoy(0, 0, convoy_id)
+    let (test) = contains_convoy(convoy_id, 0, 0)
     assert test = FALSE
-    let (test) = contains_convoy(-10, 27, convoy_id)
+    let (test) = contains_convoy(convoy_id, -10, 27)
     assert test = TRUE
     return ()
 end
@@ -160,9 +160,9 @@ end
 
 @view
 func test_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
-    %{ 
-    stop_prank_callable = start_prank(123)
-    warp(0)
+    %{
+        stop_prank_callable = start_prank(123)
+        warp(0)
     %}
     let (convoy_id) = create_mint_convoy(123, 0, 0)
     %{ warp(1) %}
