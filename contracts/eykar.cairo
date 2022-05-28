@@ -24,7 +24,6 @@ from contracts.convoys.factory import create_mint_convoy
 
 struct Plot:
     member owner : felt
-    member dateOfOwnership : felt
     member structure : felt
 end
 
@@ -222,9 +221,9 @@ func mint{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(nam
     if colony_id == 0:
         let (colony) = create_colony(name, player, x, y)
         add_colony_to_player(player, colony.redirection)
-        world.write(x, y, Plot(owner=colony.redirection, dateOfOwnership=timestamp, structure=1))
+        world.write(x, y, Plot(owner=colony.redirection, structure=1))
     else:
-        world.write(x, y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=1))
+        world.write(x, y, Plot(owner=colony_id, structure=1))
     end
     create_mint_convoy(player, x, y)
     world_update.emit(x, y)
@@ -296,7 +295,7 @@ func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
 
     # add plot to colony of source
     let (timestamp) = get_block_timestamp()
-    world.write(target_x, target_y, Plot(owner=colony_id, dateOfOwnership=timestamp, structure=2))
+    world.write(target_x, target_y, Plot(owner=colony_id, structure=2))
     world_update.emit(target_x, target_y)
     return ()
 end
