@@ -385,7 +385,6 @@ end
 # Hardcoded
 #
 
-@view
 func _is_fungible(conveyable_type : felt) -> (fungible : felt):
     # Returns TRUE if a convoyable type is fungible
     let (data_address) = get_label_location(fungibles)
@@ -398,7 +397,6 @@ func _is_fungible(conveyable_type : felt) -> (fungible : felt):
     dw TRUE  # horseman
 end
 
-@view
 func _get_movability(conveyable_type : felt) -> (movability : felt):
     # Returns the moving capacity of a conveyable
     # this can be negative (eg if the conveyable is a content and not a container)
@@ -412,7 +410,6 @@ func _get_movability(conveyable_type : felt) -> (movability : felt):
     dw 5  # horseman
 end
 
-@view
 func _get_speed(conveyable_type : felt) -> (movability : felt):
     # Returns the speed of a conveyable
     # -1 if the conveyable is not a vehicle
@@ -426,7 +423,6 @@ func _get_speed(conveyable_type : felt) -> (movability : felt):
     dw 2  # horseman
 end
 
-@view
 func _get_strength(conveyable_type : felt) -> (movability : felt):
     # Returns the strength of a conveyable
     # 0 if the conveyable doesn't have strength
@@ -440,7 +436,6 @@ func _get_strength(conveyable_type : felt) -> (movability : felt):
     dw 2  # horseman
 end
 
-@view
 func _get_protection(conveyable_type : felt) -> (movability : felt):
     # Returns the protection of a conveyable
     # 0 if the conveyable doesn't provide protection

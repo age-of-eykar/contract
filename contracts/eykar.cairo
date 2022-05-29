@@ -53,25 +53,6 @@ func get_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
     return (plot)
 end
 
-@view
-func assert_in_contact{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x1 : felt, y1 : felt, x2 : felt, y2 : felt
-) -> ():
-    # Checks if two plots are in contact
-    #
-    #   Parameters:
-    #       x1 (felt): The x coordinate of the first plot
-    #       y1 (felt): The y coordinate of the first plot
-    #       x2 (felt): The x coordinate of the second plot
-    #       y2 (felt): The y coordinate of the second plot
-
-    let (x_distance) = abs_value(x2 - x1)
-    let (y_distance) = abs_value(y2 - y1)
-    assert_le(x_distance, 1)
-    assert_le(y_distance, 1)
-    return ()
-end
-
 #
 # Colonies
 #
