@@ -79,7 +79,6 @@ func _contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
     return _contains_convoy(next_to_check, to_find)
 end
 
-@view
 func convoy_can_access{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, x : felt, y : felt
 ) -> (bool : felt):
