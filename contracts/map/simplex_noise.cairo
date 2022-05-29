@@ -93,12 +93,12 @@ func compute_t{range_check_ptr}(x: felt, y: felt) -> (t: felt):
     return (HALF - x_2 - y_2)
 end
 
-func random_szudzik{range_check_ptr}(x: felt, y: felt, modulo: felt) -> (res: felt):
+func random_szudzik{range_check_ptr}(x: felt, y: felt) -> (res: felt):
     let (x_felt) = to_felt(x)
     let (y_felt) = to_felt(y)
     let (temp) = szudzik(x_felt, y_felt)
     let (random) = lcg(temp, 2)
-    let (_, res) = unsigned_div_rem(random, modulo)
+    let (_, res) = unsigned_div_rem(random, 8)
     return (res)
 end
 
@@ -133,9 +133,9 @@ func noise{range_check_ptr}(x: felt, y: felt) -> (noise: felt):
     let y2 = y0 - ONE + G2
 
     # random gradient
-    let (r0) = random_szudzik(i, j, 8)
-    let (r1) = random_szudzik(i+i1, j+j1, 8)
-    let (r2) = random_szudzik(i+1, j1+1, 8)
+    let (r0) = random_szudzik(i, j)
+    let (r1) = random_szudzik(i+i1, j+j1)
+    let (r2) = random_szudzik(i+ONE, j+ONE)
 
     let (g0) = select_grad2(r0)
     let (g1) = select_grad2(r1)
@@ -153,19 +153,19 @@ end
 
 func simplex_noise_bis{range_check_ptr}(
     x: felt, y: felt, o: felt, p: felt, a: felt, f: felt, max: felt, r: felt
-) -> (r: felt, max: felt):
+) -> (res: felt):
     alloc_locals
     if o == 0:
-        return (r, max)
+        return div(r, max)
     else:
         let (x_f) = mul(x, f)
         let (y_f) = mul(y, f)
         let (f) = mul(f, TWO)
-        let (n) = noise(x_f, x_f)
-        let (r) = mul(r + n, a)
+        let (n) = noise(x_f, y_f)
+        let (temp) = mul(n, a)
         let max = max + a
         let (a) = mul(a, p)
-        return simplex_noise_bis(x=x, y=y, o=o-1, p=p, a=a, f=f, max=max, r=r)
+        return simplex_noise_bis(x=x, y=y, o=o-1, p=p, a=a, f=f, max=max, r=r+temp)
     end
 end
 
@@ -173,6 +173,5 @@ end
 func simplex_noise{range_check_ptr}(
     x: felt, y: felt, octaves: felt, persistence: felt, frequency: felt
 ) -> (res: felt):
-    let (r, max) = simplex_noise_bis(x, y, octaves, persistence, 2305843009213693952, frequency, 0, 0)
-    return div(r, max)
+    return simplex_noise_bis(x, y, octaves, persistence, 2305843009213693952, frequency, 0, 0)
 end
