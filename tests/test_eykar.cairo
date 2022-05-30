@@ -4,8 +4,8 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_caller_address
 from contracts.eykar import (
     mint,
-    extend,
-    settle,
+    expand,
+    conquer,
     get_player_colonies,
     current_registration_id,
     get_colony,
@@ -34,7 +34,7 @@ func test_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
 end
 
 @view
-func test_extend{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+func test_expand{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
     %{ stop_prank_callable = start_prank(123) %}
     let (caller) = get_caller_address()
@@ -48,7 +48,7 @@ func test_extend{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuilti
     assert colonies_len = 1
     assert [colonies] = 1
 
-    extend(1, 0, 0, 1, 0)
+    expand(1, 0, 0, 1, 0)
     let (plot) = get_plot(1, 0)
     assert plot.owner = 1
 
@@ -57,7 +57,7 @@ func test_extend{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuilti
 end
 
 @view
-func test_settle{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+func test_conquer{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
     %{
         stop_prank_callable = start_prank(123)
@@ -76,7 +76,7 @@ func test_settle{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuilti
     %{ warp(1) %}
     move_convoy(1, 0, 0, 3, -4)
     %{ warp(1000000) %}
-    settle(1, 3, -4, 512970878052)
+    conquer(1, 3, -4, 512970878052)
     let (colonies_len : felt, colonies : felt*) = get_player_colonies(caller)
     assert colonies_len = 2
     assert [colonies] = 1

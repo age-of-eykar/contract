@@ -245,15 +245,15 @@ func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
 end
 
 @external
-func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func expand{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
 ):
-    # Extends a colony using a convoy at destination
+    # Expands a colony using a convoy at destination
     #
     # Parameters:
     #     convoy_id (felt): The id of the convoy
-    #     source_x (felt): The x coordinate of the plot to extend
-    #     source_y (felt): The y coordinate of the plot to extend
+    #     source_x (felt): The x coordinate of the plot to expand
+    #     source_y (felt): The y coordinate of the plot to expand
     #     target_x (felt): The x coordinate of the plot to conquer
     #     target_y (felt): The y coordinate of the plot to conquer
 
@@ -285,7 +285,7 @@ func extend{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
 end
 
 @external
-func settle{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func conquer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, x : felt, y : felt, name : felt
 ):
     # Conquers a plot using a convoy and create a new colony (or add the plot to an existing one)
