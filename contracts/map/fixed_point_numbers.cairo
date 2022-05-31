@@ -1,8 +1,6 @@
 %lang starknet
 
 from starkware.cairo.common.uint256 import Uint256
-from starkware.cairo.common.math_cmp import is_le, is_not_zero
-from starkware.cairo.common.pow import pow
 from starkware.cairo.common.math import (
     assert_le,
     assert_lt,
@@ -10,8 +8,6 @@ from starkware.cairo.common.math import (
     sign,
     abs_value,
     signed_div_rem,
-    unsigned_div_rem,
-    assert_not_zero
 )
 
 const Math64x61_INT_PART = 2 ** 64
@@ -71,34 +67,6 @@ func Math64x61_div {range_check_ptr} (x: felt, y: felt) -> (res: felt):
     let (res_u, _) = signed_div_rem(product, div, Math64x61_BOUND)
     Math64x61_assert64x61(res_u)
     return (res = res_u * div_sign)
-end
-
-func Math64x61_pow {range_check_ptr} (x: felt, y: felt) -> (res: felt):
-    alloc_locals
-    let (exp_sign) = sign(y)
-    let (exp_val) = abs_value(y)
-
-    if exp_sign == 0:
-        return (Math64x61_ONE)
-    end
-
-    if exp_sign == -1:
-        let (num) = Math64x61_pow(x, exp_val)
-        return Math64x61_div(Math64x61_ONE, num)
-    end
-
-    let (half_exp, rem) = unsigned_div_rem(exp_val, 2)
-    let (half_pow) = Math64x61_pow(x, half_exp)
-    let (res_p) = Math64x61_mul(half_pow, half_pow)
-
-    if rem == 0:
-        Math64x61_assert64x61(res_p)
-        return (res_p)
-    else:
-        let (res) = Math64x61_mul(res_p, x)
-        Math64x61_assert64x61(res)
-        return (res)
-    end
 end
 
 # Calculates the square root of a fixed point value

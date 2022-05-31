@@ -4,6 +4,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 from contracts.convoys.factory import create_mint_convoy
+from contracts.convoys.conveyables.human import Human
 from contracts.convoys.library import (
     get_convoys,
     contains_convoy,
@@ -14,7 +15,6 @@ from contracts.convoys.library import (
     bind_convoy,
     unsafe_move_convoy,
     move_convoy,
-    _write_fungible_conveyable,
 )
 
 @view
@@ -88,12 +88,9 @@ func test_get_conveyables{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     let (convoy_id) = create_mint_convoy(123, 2, -3)
     let (conveyables_len, conveyables) = get_conveyables(convoy_id)
     assert conveyables_len = 1
-    assert [conveyables] = 1
-
-    let (convoy_id) = create_mint_convoy(123, 2, -3)
-    let (conveyables_len, conveyables) = get_conveyables(convoy_id)
-    assert conveyables_len = 1
-    assert [conveyables] = 2
+    let humans = [conveyables]
+    assert humans.type = Human.type
+    assert humans.amount = 10
     return ()
 end
 
@@ -101,17 +98,16 @@ end
 func test_create_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
 
-    let (conveyables) = alloc()
+    let (convoy_id) = create_convoy(123, 0)
+    Human.set(convoy_id, 27)
+    bind_convoy(convoy_id, 3, 2)
 
-    let (conveyable_0) = _write_fungible_conveyable(1, 2)
-    assert [conveyables] = conveyable_0
-    let (conveyable_1) = _write_fungible_conveyable(2, 5)
-    assert [conveyables + 1] = conveyable_1
+    let (conveyables_len, conveyables) = get_conveyables(convoy_id)
+    assert conveyables_len = 1
+    let humans = [conveyables]
+    assert humans.type = Human.type
+    assert humans.amount = 27
 
-    let (convoy_id) = create_convoy(123, 3, 2, conveyables)
-    let (content_len, content) = get_conveyables(convoy_id)
-    assert [content] = conveyable_0
-    assert [content + 1] = conveyable_1
     return ()
 end
 
@@ -121,16 +117,18 @@ func test_bind_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashB
 
     let (conveyables) = alloc()
 
-    let (conveyable_0) = _write_fungible_conveyable(1, 2)
-    assert [conveyables] = conveyable_0
-    let (conveyable_1) = _write_fungible_conveyable(2, 5)
-    assert [conveyables + 1] = conveyable_1
-
-    let (convoy_id) = create_convoy(123, 3, 2, conveyables)
+    let (convoy_id) = create_convoy(123, 0)
     bind_convoy(convoy_id, -12, 11)
     let (convoys_len, convoys) = get_convoys(-12, 11)
     assert convoys_len = 1
     assert [convoys] = convoy_id
+
+    let (convoy_id) = create_convoy(1234, 0)
+    bind_convoy(convoy_id, -12, 11)
+    let (convoys_len, convoys) = get_convoys(-12, 11)
+    assert convoys_len = 2
+    assert [convoys + 1] = convoy_id
+
     return ()
 end
 
