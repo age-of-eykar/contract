@@ -3,6 +3,11 @@
 from starkware.cairo.common.math import sqrt, unsigned_div_rem
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 
+struct Location:
+    member x : felt
+    member y : felt
+end
+
 func get_distance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         xmin : felt, ymin : felt, xmax : felt, ymax : felt) -> (distance : felt):
     # Calculate an approximated ineteger distance between two Cartesian coordinates

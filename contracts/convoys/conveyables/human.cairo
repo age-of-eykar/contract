@@ -2,7 +2,7 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
-from contracts.convoys.conveyables import FungibleConveyable
+from contracts.convoys.conveyables import Conveyable
 
 @storage_var
 func balances(convoy_id : felt) -> (balance : felt):
@@ -13,42 +13,24 @@ namespace Human:
     const type = (448646701422)
 
     func append_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        convoy_id : felt, fungibles_len : felt, fungibles : FungibleConveyable*
-    ) -> (fungibles_len : felt, fungibles : FungibleConveyable*):
-        # Append the meta data to the fungibles array if conveyable is part of the convoy
+        convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*
+    ) -> (conveyables_len : felt, conveyables : Conveyable*):
+        # Append the meta data to the conveyables array if conveyable is part of the convoy
         #
         # Parameters:
         #   convoy_id: The ID of the convoy to check
-        #   fungibles_len: The length of the fungibles array
-        #   fungibles: The fungibles array
+        #   conveyables_len: The length of the conveyables array
+        #   conveyables: The conveyables array
         #
         # Returns:
-        #   fungibles_len: The length of the fungibles array
-        #   fungibles: The fungibles array
+        #   conveyables_len: The length of the conveyables array
+        #   conveyables: The conveyables array
         let (amount) = balances.read(convoy_id)
         if amount == 0:
-            return (fungibles_len, fungibles)
+            return (conveyables_len, conveyables)
         else:
-            assert [fungibles] = FungibleConveyable(type, amount)
-            return (fungibles_len + 1, fungibles + 2)
-        end
-    end
-
-    func contains{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        convoy_id : felt
-    ) -> (contained : felt):
-        # Check if a convoy contains a human
-        #
-        # Parameters:
-        #   convoy_id: The ID of the convoy to check
-        #
-        # Returns:
-        #   TRUE if the convoy contains the human, FALSE otherwise
-        let (amount) = balances.read(convoy_id)
-        if amount == 0:
-            return (FALSE)
-        else:
-            return (TRUE)
+            assert [conveyables] = Conveyable(type, amount)
+            return (conveyables_len + 1, conveyables + 2)
         end
     end
 

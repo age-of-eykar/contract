@@ -10,7 +10,7 @@ from starkware.cairo.common.math import assert_le, assert_not_equal
 from starkware.cairo.common.math_cmp import is_not_zero
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 from contracts.convoys.conveyables.human import Human
-from contracts.convoys.conveyables import FungibleConveyable, NonFungibleConveyable
+from contracts.convoys.conveyables import Conveyable
 
 struct ConvoyMeta:
     member owner : felt  # address
@@ -133,21 +133,21 @@ end
 @view
 func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt
-) -> (fungibles_len : felt, fungibles : FungibleConveyable*):
+) -> (conveyables_len : felt, conveyables : Conveyable*):
     # Gets the conveyables of a convoy [tested: test_get_conveyables]
     #
     #   Parameters:
     #       convoy_id : convoy_id
     #
     #   Returns:
-    #       fungibles_len : length of the fungible conveyables array
-    #       fungibles : array of fungible conveyable_id
+    #       conveyables_len : length of the fungible conveyables array
+    #       conveyables : array of fungible conveyable_id
     alloc_locals
-    let fungibles_len = 0
-    let (fungibles : FungibleConveyable*) = alloc()
-    let (fungibles_len, fungibles) = Human.append_meta(convoy_id, fungibles_len, fungibles)
+    let conveyables_len = 0
+    let (conveyables : Conveyable*) = alloc()
+    let (conveyables_len, conveyables) = Human.append_meta(convoy_id, conveyables_len, conveyables)
 
-    return (fungibles_len, fungibles - fungibles_len * 2)
+    return (conveyables_len, conveyables - conveyables_len * 2)
 end
 
 #

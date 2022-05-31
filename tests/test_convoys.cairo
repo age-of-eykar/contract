@@ -90,7 +90,7 @@ func test_get_conveyables{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     assert conveyables_len = 1
     let humans = [conveyables]
     assert humans.type = Human.type
-    assert humans.amount = 10
+    assert humans.data = 10
     return ()
 end
 
@@ -106,7 +106,7 @@ func test_create_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Has
     assert conveyables_len = 1
     let humans = [conveyables]
     assert humans.type = Human.type
-    assert humans.amount = 27
+    assert humans.data = 27
 
     return ()
 end
