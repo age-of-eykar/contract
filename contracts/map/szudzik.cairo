@@ -2,7 +2,7 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.math_cmp import is_le, is_nn
-from starkware.cairo.common.math import unsigned_div_rem, assert_in_range
+from starkware.cairo.common.math import unsigned_div_rem
 
 func compute_szudzik{range_check_ptr}(a: felt) -> (res: felt):
     let (temp) = is_nn(a)
