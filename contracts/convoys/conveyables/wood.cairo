@@ -8,9 +8,9 @@ from contracts.convoys.conveyables import Conveyable
 func balances(convoy_id : felt) -> (balance : felt):
 end
 
-namespace Human:
-    # human
-    const type = 'human'
+namespace Wood:
+    # wood
+    const type = 'wood'
 
     func append_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*
@@ -48,19 +48,6 @@ namespace Human:
         return (amount)
     end
 
-    func speed{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        convoy_id : felt
-    ) -> (speed : felt):
-        # Get the speed of a specific conveyable
-        #
-        # Parameters:
-        #   convoy_id: The ID of the convoy to check
-        #
-        # Returns:
-        #   The speed of this conveyable within convoy
-        return (1)
-    end
-
     func movability{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         convoy_id : felt
     ) -> (movability : felt):
@@ -72,35 +59,7 @@ namespace Human:
         # Returns:
         #   The movability of this conveyable within convoy
         let (amount) = balances.read(convoy_id)
-        return (amount * 1)
-    end
-
-    func strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        convoy_id : felt
-    ) -> (strength : felt):
-        # Get the strength of a specific conveyable
-        #
-        # Parameters:
-        #   convoy_id: The ID of the convoy to check
-        #
-        # Returns:
-        #   The strength of this conveyable within convoy
-        let (amount) = balances.read(convoy_id)
-        return (amount * 1)
-    end
-
-    func protection{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        convoy_id : felt
-    ) -> (protection : felt):
-        # Get the protection of a specific conveyable
-        #
-        # Parameters:
-        #   convoy_id: The ID of the convoy to check
-        #
-        # Returns:
-        #   The protection of this conveyable within convoy
-        let (amount) = balances.read(convoy_id)
-        return (amount * 1)
+        return (amount * (-1))
     end
 
     func set{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
