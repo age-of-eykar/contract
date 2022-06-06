@@ -57,12 +57,6 @@ func redirect_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
         plots_amount=old_colony.plots_amount,
         redirection=new_colony.redirection),
     )
-    colonies.write(
-        new_id - 1,
-        Colony(new_colony.name, new_colony.owner, new_colony.x, new_colony.y,
-        plots_amount=old_colony.plots_amount + new_colony.plots_amount,
-        redirection=old_colony.redirection),
-    )
     return ()
 end
 

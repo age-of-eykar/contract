@@ -79,24 +79,33 @@ end
 
 func _get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     player : felt, colonies_index : felt
-) -> (colonies_len : felt, colonies : felt*):
+) -> (colonies_len : felt, found_colonies : felt*):
     alloc_locals
-    let (colony) = _player_colonies_storage.read(player, colonies_index)
-    if colony == 0:
-        let (colonies) = alloc()
-        return (0, colonies)
+    let (colony_id) = _player_colonies_storage.read(player, colonies_index)
+
+    if colony_id == 0:
+        let (found_colonies) = alloc()
+        return (0, found_colonies)
     end
 
-    let (colonies_len, colonies) = _get_player_colonies(player, colonies_index + 1)
-    assert colonies[colonies_index] = colony
-    return (colonies_len + 1, colonies)
+    let (colonies_len, found_colonies) = _get_player_colonies(player, colonies_index + 1)
+    let (colony : Colony) = colonies.read(colony_id - 1)
+    let redirect : felt = colony.redirection
+
+    if colony.redirection == colony_id:
+        assert [found_colonies] = colony_id
+        return (colonies_len + 1, found_colonies + 1)
+    else:
+        return (colonies_len, found_colonies)
+    end
 end
 
 @view
 func get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     player : felt
 ) -> (colonies_len : felt, colonies : felt*):
-    return _get_player_colonies(player, 0)
+    let (colonies_len, found_colonies) = _get_player_colonies(player, 0)
+    return (colonies_len, found_colonies - colonies_len)
 end
 
 func _colonies_amount{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(

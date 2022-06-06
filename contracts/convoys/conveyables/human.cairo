@@ -10,7 +10,7 @@ end
 
 namespace Human:
     # human
-    const type = (448646701422)
+    const type = 'human'
 
     func append_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*

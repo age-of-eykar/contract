@@ -19,16 +19,16 @@ func test_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
     %{ stop_prank_callable = start_prank(123) %}
     let (caller) = get_caller_address()
 
-    let (size : felt, colonies : felt*) = get_player_colonies(caller)
-    assert size = 0
+    # let (size : felt, colonies : felt*) = get_player_colonies(caller)
+    # assert size = 0
 
-    mint(448378203247)
-    mint(512970878052)
+    mint('hello')
+    mint('world')
 
     let (colonies_len : felt, colonies : felt*) = get_player_colonies(caller)
     assert colonies_len = 2
-    assert [colonies] = 1
-    assert [colonies + 1] = 2
+    assert [colonies] = 2
+    assert [colonies + 1] = 1
     %{ stop_prank_callable() %}
     return ()
 end
@@ -42,7 +42,7 @@ func test_expand{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuilti
     let (size : felt, colonies : felt*) = get_player_colonies(caller)
     assert size = 0
 
-    mint(448378203247)
+    mint('hello')
 
     let (colonies_len : felt, colonies : felt*) = get_player_colonies(caller)
     assert colonies_len = 1
@@ -68,19 +68,54 @@ func test_conquer{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuilt
     let (size : felt, colonies : felt*) = get_player_colonies(caller)
     assert size = 0
 
-    mint(448378203247)
+    mint('hello')
 
     let (colonies_len : felt, colonies : felt*) = get_player_colonies(caller)
     assert colonies_len = 1
     assert [colonies] = 1
     %{ warp(1) %}
     move_convoy(1, 0, 0, 3, -4)
-    %{ warp(1000000) %}
-    conquer(1, 3, -4, 512970878052)
+    conquer(1, 3, -4, 'world')
     let (colonies_len : felt, colonies : felt*) = get_player_colonies(caller)
     assert colonies_len = 2
+    assert [colonies] = 2
+    assert [colonies + 1] = 1
+    %{ stop_prank_callable() %}
+    return ()
+end
+
+@view
+func test_merge{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
+    %{
+        stop_prank_callable = start_prank(123)
+        warp(0)
+    %}
+    let (caller) = get_caller_address()
+
+    let (size : felt, colonies : felt*) = get_player_colonies(caller)
+    assert size = 0
+
+    mint('hello')
+
+    let (colonies_len : felt, colonies : felt*) = get_player_colonies(caller)
+    assert colonies_len = 1
     assert [colonies] = 1
-    assert [colonies + 1] = 2
+    %{ warp(1) %}
+    move_convoy(1, 0, 0, 2, 0)
+    conquer(1, 2, 0, 'world')
+    let (colonies_len : felt, colonies : felt*) = get_player_colonies(caller)
+    assert colonies_len = 2
+    assert [colonies] = 2
+    assert [colonies + 1] = 1
+
+    move_convoy(1, 2, 0, 1, 0)
+    conquer(1, 1, 0, 0)
+
+    let (colonies_len : felt, colonies : felt*) = get_player_colonies(caller)
+
+    assert colonies_len = 1
+
     %{ stop_prank_callable() %}
     return ()
 end

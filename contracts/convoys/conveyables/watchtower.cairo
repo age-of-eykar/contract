@@ -70,7 +70,7 @@ end
 
 namespace WatchTower:
     # human
-    const type = (563759332298417996522866)
+    const type = 'watchtower'
 
     func append_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*
