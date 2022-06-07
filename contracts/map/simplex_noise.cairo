@@ -1,5 +1,6 @@
 %lang starknet
 
+from starkware.cairo.common.bool import TRUE
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.math_cmp import is_le, is_nn
@@ -75,7 +76,7 @@ func contribution{range_check_ptr}(grad: (felt, felt), x: felt, y: felt)->(res: 
     let (t) = compute_t(x, y)
     let (temp) = is_nn(t)
 
-    if temp != 0:
+    if temp == TRUE:
         let (t_2) = mul(t, t)
         let (t_4) = mul(t_2, t_2)
         let (d) = dot(grad, x, y)
@@ -102,7 +103,7 @@ end
 
 func determine_simplex{range_check_ptr}(x: felt, y: felt) -> (i: felt, j: felt):
     let (temp) = is_le(x, y)
-    if temp == 1:
+    if temp == TRUE:
         return (0, ONE)
     else:
         return (ONE, 0)
