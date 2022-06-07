@@ -5,6 +5,13 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 struct Plot:
     member owner : felt
     member structure : felt
+    member availability : felt
+end
+
+struct Structure:
+    member NONE : felt
+    member SETTLER_CAMP : felt
+    member LUMBER_CAMP : felt
 end
 
 @storage_var

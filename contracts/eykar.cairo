@@ -8,13 +8,14 @@ from starkware.cairo.common.math import assert_le, abs_value
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.alloc import alloc
 
-from contracts.world import Plot, world, world_update, get_plot
+from contracts.world import Plot, Structure, world, world_update, get_plot
 from contracts.coordinates import spiral, get_distance
 from contracts.colonies import Colony, colonies, get_colony, create_colony, redirect_colony
 from contracts.convoys.library import (
     get_convoy_strength,
     convoy_can_access,
     contains_convoy,
+    assert_can_spend_convoy,
     unsafe_move_convoy,
     convoy_meta,
     ConvoyMeta,
@@ -181,9 +182,15 @@ func mint{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(nam
     if colony_id == 0:
         let (colony) = create_colony(name, player, x, y)
         add_colony_to_player(player, colony.redirection)
-        world.write(x, y, Plot(owner=colony.redirection, structure=1))
+        world.write(
+            x,
+            y,
+            Plot(owner=colony.redirection, structure=Structure.SETTLER_CAMP, availability=timestamp),
+        )
     else:
-        world.write(x, y, Plot(owner=colony_id, structure=1))
+        world.write(
+            x, y, Plot(owner=colony_id, structure=Structure.SETTLER_CAMP, availability=timestamp)
+        )
     end
     create_mint_convoy(player, x, y)
     world_update.emit(x, y)
@@ -207,12 +214,8 @@ func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     assert plot.owner = 0
 
     # check caller is convoy owner
-    let meta : ConvoyMeta = convoy_meta.read(convoy_id)
-    assert meta.owner = caller
-
     # Check if the convoy is ready to be used
-    let (timestamp : felt) = get_block_timestamp()
-    assert_le(meta.availability, timestamp)
+    assert_can_spend_convoy(convoy_id, caller)
 
     # Check convoy strength is enough
     let (strength : felt) = get_convoy_strength(convoy_id)
@@ -256,7 +259,7 @@ func expand{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
 
     # add plot to colony of source
     let (timestamp) = get_block_timestamp()
-    world.write(target_x, target_y, Plot(owner=colony_id, structure=2))
+    world.write(target_x, target_y, Plot(owner=colony_id, structure=2, availability=timestamp))
     world_update.emit(target_x, target_y)
     return ()
 end
@@ -289,9 +292,15 @@ func conquer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     if colony_id == 0:
         let (colony) = create_colony(name, player, x, y)
         add_colony_to_player(player, colony.redirection)
-        world.write(x, y, Plot(owner=colony.redirection, structure=1))
+        world.write(
+            x,
+            y,
+            Plot(owner=colony.redirection, structure=Structure.SETTLER_CAMP, availability=timestamp),
+        )
     else:
-        world.write(x, y, Plot(owner=colony_id, structure=1))
+        world.write(
+            x, y, Plot(owner=colony_id, structure=Structure.SETTLER_CAMP, availability=timestamp)
+        )
     end
     world_update.emit(x, y)
     return ()

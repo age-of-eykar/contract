@@ -151,6 +151,43 @@ func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
     return (conveyables_len, conveyables - conveyables_len * 2)
 end
 
+@view
+func assert_can_spend_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, spender : felt
+) -> ():
+    # Check if a convoy can be spent by a specific user
+    #
+    #   Parameters:
+    #       convoy_id (felt) : The convoy to move
+    #       spender (felt) : The user who wants to spend the convoy
+
+    let (meta) = convoy_meta.read(convoy_id)
+    assert meta.owner = spender
+    let (timestamp) = get_block_timestamp()
+    # assert meta.availability <= timestamp
+    assert_le(meta.availability, timestamp)
+    return ()
+end
+
+@view
+func assert_can_move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, spender : felt
+) -> ():
+    # Check if a convoy can be spent by a specific user
+    #
+    #   Parameters:
+    #       convoy_id (felt) : The convoy to move
+    #       spender (felt) : The user who wants to spend the convoy
+
+    let (meta) = convoy_meta.read(convoy_id)
+    assert meta.owner = spender
+    let (timestamp) = get_block_timestamp()
+    # assert meta.availability < timestamp (not just <=)
+    assert_le(meta.availability, timestamp)
+    assert_not_equal(meta.availability, timestamp)
+    return ()
+end
+
 #
 # Setters
 #
@@ -167,13 +204,8 @@ func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     #       target_x (felt) : The x coordinate of the target location
     #       target_y (felt) : The y coordinate of the target location
 
-    let (meta) = convoy_meta.read(convoy_id)
     let (caller) = get_caller_address()
-    assert meta.owner = caller
-    let (timestamp) = get_block_timestamp()
-    # assert meta.availability < timestamp (not just <=)
-    assert_le(meta.availability, timestamp)
-    assert_not_equal(meta.availability, timestamp)
+    assert_can_move_convoy(convoy_id, caller)
     unsafe_move_convoy(convoy_id, source_x, source_y, target_x, target_y)
     return ()
 end
