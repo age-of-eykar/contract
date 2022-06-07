@@ -5,7 +5,7 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from contracts.convoys.conveyables import Conveyable
 
 @storage_var
-func balances(convoy_id : felt) -> (balance : felt):
+func wood_balances(convoy_id : felt) -> (balance : felt):
 end
 
 namespace Wood:
@@ -25,7 +25,7 @@ namespace Wood:
         # Returns:
         #   conveyables_len: The length of the conveyables array
         #   conveyables: The conveyables array
-        let (amount) = balances.read(convoy_id)
+        let (amount) = wood_balances.read(convoy_id)
         if amount == 0:
             return (conveyables_len, conveyables)
         else:
@@ -44,8 +44,21 @@ namespace Wood:
         #
         # Returns:
         #   The amount of this conveyable in the convoy
-        let (amount) = balances.read(convoy_id)
+        let (amount) = wood_balances.read(convoy_id)
         return (amount)
+    end
+
+    func speed{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        convoy_id : felt
+    ) -> (speed : felt):
+        # Get the speed of a specific conveyable
+        #
+        # Parameters:
+        #   convoy_id: The ID of the convoy to check
+        #
+        # Returns:
+        #   The speed of this conveyable within convoy
+        return (-1)
     end
 
     func movability{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -58,7 +71,7 @@ namespace Wood:
         #
         # Returns:
         #   The movability of this conveyable within convoy
-        let (amount) = balances.read(convoy_id)
+        let (amount) = wood_balances.read(convoy_id)
         return (amount * (-1))
     end
 
@@ -70,7 +83,7 @@ namespace Wood:
         # Parameters:
         #   convoy_id: The ID of the convoy to create the conveyable in
         #   amount: The amount of the conveyable to create
-        balances.write(convoy_id, amount)
+        wood_balances.write(convoy_id, amount)
         return ()
     end
 
@@ -82,10 +95,10 @@ namespace Wood:
         # Parameters:
         #   source_id: The ID of the convoy to transfer from
         #   target_id: The ID of the convoy to transfer to
-        let (source_amount) = balances.read(source_id)
-        let (target_amount) = balances.read(target_id)
-        balances.write(source_id, 0)
-        balances.write(target_id, target_amount + source_amount)
+        let (source_amount) = wood_balances.read(source_id)
+        let (target_amount) = wood_balances.read(target_id)
+        wood_balances.write(source_id, 0)
+        wood_balances.write(target_id, target_amount + source_amount)
         return ()
     end
 
@@ -96,7 +109,7 @@ namespace Wood:
         #
         # Parameters:
         #   convoy_id: The ID of the convoy to burn
-        balances.write(convoy_id, 0)
+        wood_balances.write(convoy_id, 0)
         return ()
     end
 end

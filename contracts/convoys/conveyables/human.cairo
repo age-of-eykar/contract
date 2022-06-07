@@ -5,7 +5,7 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from contracts.convoys.conveyables import Conveyable
 
 @storage_var
-func balances(convoy_id : felt) -> (balance : felt):
+func human_balances(convoy_id : felt) -> (balance : felt):
 end
 
 namespace Human:
@@ -25,7 +25,7 @@ namespace Human:
         # Returns:
         #   conveyables_len: The length of the conveyables array
         #   conveyables: The conveyables array
-        let (amount) = balances.read(convoy_id)
+        let (amount) = human_balances.read(convoy_id)
         if amount == 0:
             return (conveyables_len, conveyables)
         else:
@@ -44,7 +44,7 @@ namespace Human:
         #
         # Returns:
         #   The amount of this conveyable in the convoy
-        let (amount) = balances.read(convoy_id)
+        let (amount) = human_balances.read(convoy_id)
         return (amount)
     end
 
@@ -71,7 +71,7 @@ namespace Human:
         #
         # Returns:
         #   The movability of this conveyable within convoy
-        let (amount) = balances.read(convoy_id)
+        let (amount) = human_balances.read(convoy_id)
         return (amount * 1)
     end
 
@@ -85,7 +85,7 @@ namespace Human:
         #
         # Returns:
         #   The strength of this conveyable within convoy
-        let (amount) = balances.read(convoy_id)
+        let (amount) = human_balances.read(convoy_id)
         return (amount * 1)
     end
 
@@ -99,7 +99,7 @@ namespace Human:
         #
         # Returns:
         #   The protection of this conveyable within convoy
-        let (amount) = balances.read(convoy_id)
+        let (amount) = human_balances.read(convoy_id)
         return (amount * 1)
     end
 
@@ -111,7 +111,7 @@ namespace Human:
         # Parameters:
         #   convoy_id: The ID of the convoy to create the conveyable in
         #   amount: The amount of the conveyable to create
-        balances.write(convoy_id, amount)
+        human_balances.write(convoy_id, amount)
         return ()
     end
 
@@ -123,10 +123,10 @@ namespace Human:
         # Parameters:
         #   source_id: The ID of the convoy to transfer from
         #   target_id: The ID of the convoy to transfer to
-        let (source_amount) = balances.read(source_id)
-        let (target_amount) = balances.read(target_id)
-        balances.write(source_id, 0)
-        balances.write(target_id, target_amount + source_amount)
+        let (source_amount) = human_balances.read(source_id)
+        let (target_amount) = human_balances.read(target_id)
+        human_balances.write(source_id, 0)
+        human_balances.write(target_id, target_amount + source_amount)
         return ()
     end
 
@@ -137,7 +137,7 @@ namespace Human:
         #
         # Parameters:
         #   convoy_id: The ID of the convoy to burn
-        balances.write(convoy_id, 0)
+        human_balances.write(convoy_id, 0)
         return ()
     end
 end
