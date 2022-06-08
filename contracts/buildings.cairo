@@ -5,6 +5,8 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 from contracts.convoys.library import assert_can_spend_convoy, contains_convoy
 from contracts.world import Plot, Structure, world, world_update, get_plot
+from contracts.colonies import get_colony
+from contracts.map.biomes import assert_jungle_or_forest
 
 @storage_var
 func exploitation_start(x : felt, y : felt) -> (timestamp : felt):
@@ -30,15 +32,17 @@ func build_lumber_camp{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
             assert 1 = 0
         end
     end
-
+    
+    let (colony) = get_colony(existing_plot.owner)
     let (caller) = get_caller_address()
-    assert existing_plot.owner = caller
+    assert colony.owner = caller
     assert_can_spend_convoy(convoy_id, caller)
 
     let (timestamp) = get_block_timestamp()
+    assert_jungle_or_forest(x, y)
 
     # 300sec = 5min
     exploitation_start.write(x, y, timestamp + 300)
-    world.write(x, y, Plot(convoy_id, Structure.LUMBER_CAMP, timestamp + 300))
+    world.write(x, y, Plot(colony.owner, Structure.LUMBER_CAMP, timestamp + 300))
     return ()
 end

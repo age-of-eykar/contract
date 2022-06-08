@@ -158,6 +158,7 @@ end
 
 @view
 func test_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
     %{
         stop_prank_callable = start_prank(123)
         warp(0)
@@ -165,6 +166,8 @@ func test_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashB
     let (convoy_id) = create_mint_convoy(123, 0, 0)
     %{ warp(1) %}
     move_convoy(convoy_id, 0, 0, -10, 27)
+    let (test) = contains_convoy(convoy_id, -10, 27)
+    assert test = TRUE
     %{ stop_prank_callable() %}
     return ()
 end
