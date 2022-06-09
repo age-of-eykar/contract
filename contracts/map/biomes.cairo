@@ -17,7 +17,7 @@ end
 # Parameters and return values are float, represented by 64.61 floating point format
 # So convertion must be done before and after using this functions.
 func get_temperature{range_check_ptr}(x : felt, y : felt) -> (res : felt):
-    return simplex_noise(x, y, 1, 2305843009213693952, 34587645138205408)
+    return simplex_noise(x, y, 1, FRACT_PART, 34587645138205408)
 end
 
 func assert_jungle_or_forest{range_check_ptr}(x : felt, y : felt) -> ():
