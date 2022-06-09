@@ -55,7 +55,8 @@ func non_renew_extraction{range_check_ptr}(t: felt, K: felt) -> (amount: felt):
     let (sqrt_t) = sqrt(t)
     let (temp) = div(t_5 * FRACT_PART, K_5 * sqrt_t * FRACT_PART)
     let (res) = div(K * FRACT_PART, FRACT_PART + temp)
-    return to_felt(res)
+    let (amount) = to_felt(res)
+    return (amount)
 end
 
 func get_alpha{range_check_ptr}(x: felt, y: felt) -> (alpha: felt, sqrt_alpha: felt):

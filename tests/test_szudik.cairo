@@ -27,9 +27,10 @@ func test_lcg{range_check_ptr}():
     return ()
 end
 
-func random_szudzik{range_check_ptr}(x: felt, y: felt, loop: felt) -> (res: felt):
+func random_szudzik{range_check_ptr}(x: felt, y: felt, loop: felt) -> (result: felt):
     let (temp) = szudzik(x, y)
-    return lcg(temp, loop)
+    let (result) = lcg(temp, loop)
+    return (result)
 end
 
 @view
