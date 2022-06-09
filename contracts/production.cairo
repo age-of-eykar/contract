@@ -3,8 +3,13 @@
 from starkware.cairo.common.math import unsigned_div_rem, abs_value, sqrt
 from starkware.cairo.common.pow import pow
 from starkware.cairo.common.math_cmp import is_nn
-from contracts.fixed_point_numbers import Math64x61_div, Math64x61_toFelt
+from starkware.cairo.common.bool import TRUE
 from contracts.map.biomes import get_temperature
+from contracts.fixed_point_numbers import (
+    Math64x61_div as div,
+    Math64x61_toFelt as to_felt,
+    Math64x61_mul as mul
+)
 
 # To learn more about Eykar resources and extraction see our wiki: (insert link)
 
@@ -23,10 +28,10 @@ func renewable_extraction{range_check_ptr}(t: felt, alpha: felt, sqrt_alpha: fel
     let (temp) = pow(t_reduced-sqrt_alpha, 3)
     let (abs_temp) = abs_value(temp)
     let (temp_div_1, _) = unsigned_div_rem(abs_temp, alpha)
-    let (temp_div_2, _) = unsigned_div_rem(3*sqrt_alpha, 5)
+    let (temp_div_2, _) = unsigned_div_rem(3 * sqrt_alpha, 5)
 
     let (temp) = is_nn(temp)
-    if temp == 1:
+    if temp == TRUE:
         return (t_reduced - temp_div_1 - temp_div_2)
     else:
         return (t_reduced + temp_div_1 - temp_div_2)
@@ -48,9 +53,9 @@ func non_renew_extraction{range_check_ptr}(t: felt, K: felt) -> (amount: felt):
     let (t_5) = pow(t, 5)
     let (K_5) = pow(K, 5)
     let (sqrt_t) = sqrt(t)
-    let (temp) = Math64x61_div(t_5 * FRACT_PART, K_5 * sqrt_t * FRACT_PART)
-    let (res) = Math64x61_div(K * FRACT_PART, FRACT_PART + temp)
-    return Math64x61_toFelt(res)
+    let (temp) = div(t_5 * FRACT_PART, K_5 * sqrt_t * FRACT_PART)
+    let (res) = div(K * FRACT_PART, FRACT_PART + temp)
+    return to_felt(res)
 end
 
 func get_alpha{range_check_ptr}(x: felt, y: felt) -> (alpha: felt, sqrt_alpha: felt):
@@ -64,11 +69,13 @@ func get_alpha{range_check_ptr}(x: felt, y: felt) -> (alpha: felt, sqrt_alpha: f
     # Returns:
     #   alpha: the alpha modifier
     #   sqrt_alpha: sqrt(alpha)
+    alloc_locals
     const FOUR_TENTH = 922337203685477632
     const THOUSAND = 2305843009213693952000
     let (temperature) = get_temperature(x * FRACT_PART, y * FRACT_PART)
     let (temp) = abs_value(FOUR_TENTH - temperature)
-    let temp = temp * temp * THOUSAND + THOUSAND
-    let (sqrt_alpha) = Math64x61_toFelt(temp)
+    let (temp) = mul(temp, temp)
+    let (temp) = mul(THOUSAND, temp)
+    let (sqrt_alpha) = to_felt(temp + THOUSAND)
     return (sqrt_alpha * sqrt_alpha, sqrt_alpha)
 end
