@@ -1,6 +1,6 @@
 %lang starknet
 
-from contracts.map.szudzik import szudzik, lcg #, reversed_szudzik
+from contracts.map.szudzik import szudzik, lcg
 
 @view
 func test_szudzik{range_check_ptr}():

@@ -1,6 +1,6 @@
 %lang starknet
 
-from contracts.buildings.production import renewable_extraction, non_renew_extraction
+from contracts.production import renewable_extraction, non_renew_extraction
 
 @view
 func test_renewable_extraction{range_check_ptr}():
@@ -26,9 +26,9 @@ func test_non_renewable_extraction{range_check_ptr}():
     let (extraction_3) = non_renew_extraction(1240, 970)
     let (extraction_4) = non_renew_extraction(420, 200)
 
-    assert extraction_1 = 1000
+    assert extraction_1 = 999
     assert extraction_2 = 6
-    assert extraction_3 = 880
-    assert extraction_4 = 75
+    assert extraction_3 = 883
+    assert extraction_4 = 65
     return ()
 end

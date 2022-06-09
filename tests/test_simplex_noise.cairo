@@ -2,7 +2,7 @@
 
 from contracts.map.simplex_noise import noise, simplex_noise
 from starkware.cairo.common.math_cmp import is_le
-from contracts.map.fixed_point_numbers import Math64x61_mul as mul
+from contracts.fixed_point_numbers import Math64x61_mul as mul
 
 @view
 func test_noise{range_check_ptr}():
