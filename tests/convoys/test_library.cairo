@@ -4,12 +4,14 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 from contracts.convoys.factory import create_mint_convoy
+from contracts.convoys.conveyables import Conveyable
 from contracts.convoys.conveyables.human import Human
 from contracts.convoys.library import (
     get_convoys,
     contains_convoy,
     convoy_can_access,
     get_convoy_strength,
+    write_conveyables_to_arr,
     get_conveyables,
     create_convoy,
     bind_convoy,
@@ -24,7 +26,6 @@ func test_create_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashB
     let (convoys_len, convoys) = get_convoys(0, 0)
     assert convoys_len = 1
     assert [convoys] = convoy_id1
-
     let (convoy_id2) = create_mint_convoy(3783, 0, 0)
     let (convoys_len, convoys) = get_convoys(0, 0)
     assert convoys_len = 2
@@ -91,6 +92,17 @@ func test_get_conveyables{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     let humans = [conveyables]
     assert humans.type = Human.type
     assert humans.data = 10
+    return ()
+end
+
+@view
+func test_write_conveyables_to_arr{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
+    let (convoy_id) = create_mint_convoy(123, 2, -3)
+    let (conveyables : Conveyable*) = alloc()
+    let (conveyables_len) = write_conveyables_to_arr(convoy_id, 0, conveyables)
+    assert conveyables_len = 1
+    assert [conveyables] = Conveyable(Human.type, 10)
     return ()
 end
 

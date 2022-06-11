@@ -75,6 +75,7 @@ namespace WatchTower:
     func append_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*
     ) -> (conveyables_len : felt, conveyables : Conveyable*):
+        # todo: update to use []
         # Append the meta data to the conveyables array if conveyable is part of the convoy
         #
         # Parameters:

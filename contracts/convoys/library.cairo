@@ -144,11 +144,9 @@ func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
     #       conveyables_len : length of the fungible conveyables array
     #       conveyables : array of fungible conveyable_id
     alloc_locals
-    let conveyables_len = 0
     let (conveyables : Conveyable*) = alloc()
-    let (conveyables_len, conveyables) = Human.append_meta(convoy_id, conveyables_len, conveyables)
-    let (conveyables_len, conveyables) = Wood.append_meta(convoy_id, conveyables_len, conveyables)
-    return (conveyables_len, conveyables - conveyables_len * 2)
+    let (conveyables_len) = write_conveyables_to_arr(convoy_id, 0, conveyables)
+    return (conveyables_len, conveyables)
 end
 
 @view
@@ -229,6 +227,59 @@ func create_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
     let meta : ConvoyMeta = ConvoyMeta(owner=owner, availability=availability)
     convoy_meta.write(convoy_id, meta)
     return (convoy_id)
+end
+
+func write_conveyables_to_arr{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*
+) -> (conveyables_len : felt):
+    # Writes the conveyables of a convoy to an array [tested: test_write_conveyables_to_arr]
+    #
+    #   Parameters:
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       conveyables_len : length of the fungible conveyables array
+    #       conveyables : array of fungible conveyable_id
+    let (conveyables_len) = Human.append_meta(convoy_id, conveyables_len, conveyables)
+    let (conveyables_len) = Wood.append_meta(convoy_id, conveyables_len, conveyables)
+    return (conveyables_len)
+end
+
+func write_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*
+) -> ():
+    # Writes the conveyables to a convoy
+    #
+    #   Parameters:
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       conveyables_len : length of the fungible conveyables array
+    #       conveyables : array of fungible conveyable_id
+
+    if conveyables_len == 0:
+        return ()
+    end
+
+    let conveyable = conveyables[conveyables_len - 1]
+    tempvar syscall_ptr = syscall_ptr
+    tempvar pedersen_ptr = pedersen_ptr
+    tempvar range_check_ptr = range_check_ptr
+    if conveyable.type == Human.type:
+        let (current_amount) = Human.amount(convoy_id)
+        Human.set(convoy_id, current_amount + conveyable.data)
+        return write_conveyables(convoy_id, conveyables_len - 1, conveyables)
+    end
+    if conveyable.type == Wood.type:
+        let (current_amount) = Wood.amount(convoy_id)
+        Wood.set(convoy_id, current_amount + conveyable.data)
+        return write_conveyables(convoy_id, conveyables_len - 1, conveyables)
+    end
+
+    with_attr error_message("couldn't write this conveyable"):
+        assert 1 = 0
+    end
+    return write_conveyables(convoy_id, conveyables_len - 1, conveyables)
 end
 
 func bind_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(

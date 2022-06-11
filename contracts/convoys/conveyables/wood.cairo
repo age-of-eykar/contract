@@ -14,7 +14,7 @@ namespace Wood:
 
     func append_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*
-    ) -> (conveyables_len : felt, conveyables : Conveyable*):
+    ) -> (conveyables_len : felt):
         # Append the meta data to the conveyables array if conveyable is part of the convoy
         #
         # Parameters:
@@ -23,14 +23,13 @@ namespace Wood:
         #   conveyables: The conveyables array
         #
         # Returns:
-        #   conveyables_len: The length of the conveyables array
-        #   conveyables: The conveyables array
+        #   conveyables_len: The new length of the conveyables array
         let (amount) = wood_balances.read(convoy_id)
         if amount == 0:
-            return (conveyables_len, conveyables)
+            return (conveyables_len)
         else:
-            assert [conveyables] = Conveyable(type, amount)
-            return (conveyables_len + 1, conveyables + 2)
+            assert conveyables[conveyables_len] = Conveyable(type, amount)
+            return (conveyables_len + 1)
         end
     end
 
