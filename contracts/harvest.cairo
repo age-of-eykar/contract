@@ -1,8 +1,10 @@
 %lang starknet
 
-from starkware.cairo.common.math import unsigned_div_rem
+from starkware.cairo.common.cairo_builtins import HashBuiltin
+from starkware.cairo.common.math import unsigned_div_rem, abs_value
 from starkware.cairo.common.bool import TRUE, FALSE
-from contracts.production import renewable_extraction, non_renew_extraction, get_alpha
+from contracts.production import renewable_extraction, non_renew_extraction, get_alpha, get_k_modifier
+from contracts.world import world
 
 func get_cycles{range_check_ptr}(t: felt, l_h_t: felt, sqrt_alpha: felt) -> (cycles: felt):
     let (n, _) = unsigned_div_rem(t - l_h_t, 2 * sqrt_alpha)
@@ -44,6 +46,25 @@ func renewable_production{range_check_ptr}(t: felt, x: felt, y: felt) -> (amount
     return (1)
 end
 
-func non_renewable_production{}(x: felt, y: felt, t: felt) -> (amout: felt):
-    return(0)
+func non_renewable_production{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    x: felt, y: felt, t: felt
+) -> (amout: felt):
+    # Calculates current non-renewable resource production since last harvest.
+    #
+    # Parameters:
+    #   t: harvest timestamp
+    #   x: x-Coordinate of the plot
+    #   y: y-Coordinate of the plot
+    #
+    # Returns:
+    #   amount: number of resource produced
+    alloc_locals
+    let (k) = get_k_modifier(x, y)
+    let (plot) = world.read(x, y)
+    let (l_h_amount) = non_renew_extraction(plot.availability, k)
+    let (t_amount) = non_renew_extraction(t, k)
+    let (plot) = (owner=plot.owner, structure=plot.structure, availability=t)
+    world.write(x, y, plot)
+    let (res) = abs_value(l_h_amount - t_amount)
+    return(res)
 end

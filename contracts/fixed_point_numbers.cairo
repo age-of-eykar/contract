@@ -6,7 +6,8 @@ from starkware.cairo.common.math import (
     sign,
     abs_value,
     signed_div_rem,
-    unsigned_div_rem
+    unsigned_div_rem,
+    sqrt
 )
 
 const Math64x61_INT_PART = 2 ** 64
@@ -71,6 +72,17 @@ end
 func Math64x61_floor {range_check_ptr} (x: felt) -> (res: felt):
     let (int_val, mod_val) = signed_div_rem(x, Math64x61_ONE, Math64x61_BOUND)
     let res = x - mod_val
+    Math64x61_assert64x61(res)
+    return (res)
+end
+
+# Calculates the square root of a fixed point value
+# x must be positive
+func Math64x61_sqrt {range_check_ptr} (x: felt) -> (res: felt):
+    alloc_locals
+    let (root) = sqrt(x)
+    let (scale_root) = sqrt(Math64x61_FRACT_PART)
+    let (res, _) = signed_div_rem(root * Math64x61_FRACT_PART, scale_root, Math64x61_BOUND)
     Math64x61_assert64x61(res)
     return (res)
 end

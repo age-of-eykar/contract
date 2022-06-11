@@ -22,13 +22,13 @@ const HALF = 1152921504606846976
 const SEVENTY = 161409010644958576640
 
 # (sqrt(3)-1)/2 in 64.61 fixed-point format
-const F = 843997118510967296
+const F = 843997118510967411
 
 # (3-sqrt(3))/6 in 64.61 fixed-point format
-const G = 487281963567575552
+const G = 487281963567575513
 
 # G * 2 in 64.61 fixed-point format
-const G2 = 974563927135151104
+const G2 = 974563927135151026
 
 # 2 in 64.61 fixed-point format
 const TWO = 4611686018427387904

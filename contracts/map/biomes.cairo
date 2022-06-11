@@ -10,14 +10,14 @@ const FRACT_PART = 2 ** 61
 # Parameters and return values are float, represented by 64.61 floating point format
 # So convertion must be done before and after using this functions.
 func get_elevation{range_check_ptr}(x : felt, y : felt) -> (res : felt):
-    return simplex_noise(x, y, 3, 1152921504606846976, 27670116110564328)
+    return simplex_noise(x, y, 3, 1152921504606846976, 27670116110564327)
 end
 
 # About units:
 # Parameters and return values are float, represented by 64.61 floating point format
 # So convertion must be done before and after using this functions.
 func get_temperature{range_check_ptr}(x : felt, y : felt) -> (res : felt):
-    return simplex_noise(x, y, 1, FRACT_PART, 34587645138205408)
+    return simplex_noise(x, y, 1, FRACT_PART, 34587645138205409)
 end
 
 func assert_jungle_or_forest{range_check_ptr}(x : felt, y : felt) -> ():
@@ -26,8 +26,7 @@ func assert_jungle_or_forest{range_check_ptr}(x : felt, y : felt) -> ():
     # Parameters:
     #   x: the x-Coordinate of the plot
     #   y: the y-Coordinate of the plot
-    #
-    
+
     # 0.1 in 64x61 fixed point format
     const ONE_TENTH = 230584300921369395
     
@@ -35,7 +34,7 @@ func assert_jungle_or_forest{range_check_ptr}(x : felt, y : felt) -> ():
     const ONE_FIFTH = 461168601842738790
 
     # 0.7 in 64x61 fixed point format
-    const ONE_SEVENTH = 329406144173384850
+    const SEVEN_TENTH = 1614090106449585766
 
     alloc_locals
     let x_frac = x * FRACT_PART
@@ -43,34 +42,35 @@ func assert_jungle_or_forest{range_check_ptr}(x : felt, y : felt) -> ():
 
     # condition: 0.2 < elevation <= 0.7
     let (elevation) = get_elevation(x_frac, y_frac)
+
     let (condition_1) = is_le(ONE_FIFTH, elevation)
     if condition_1 == FALSE:
         with_attr error_message("this plot elevation is too low for a forest/jungle"):
-            assert 1 = 0
+            assert 0 = 1
         end
     end
 
-    let (condition_2) = is_le(elevation, ONE_SEVENTH)
+    let (condition_2) = is_le(elevation, SEVEN_TENTH)
     if condition_2 == FALSE:
         with_attr error_message("this plot elevation is too high for a forest/jungle"):
-            assert 1 = 0
+            assert 0 = 1
         end
     end
 
     # condition: 0.1 < temperature < 0.7
     let (temperature) = get_temperature(x_frac, y_frac)
 
-    let (condition_1) = is_le(ONE_TENTH, elevation)
-    if condition_1 == FALSE:
+    let (condition_3) = is_le(ONE_TENTH, temperature)
+    if condition_3 == FALSE:
         with_attr error_message("this plot temperature is too low for a forest/jungle"):
-            assert 1 = 0
+            assert 0 = 1
         end
     end
 
-    let (condition_2) = is_le(elevation, ONE_SEVENTH)
-    if condition_2 == FALSE:
+    let (condition_4) = is_le(temperature, SEVEN_TENTH)
+    if condition_4 == FALSE:
         with_attr error_message("this plot temperature is too high for a forest/jungle"):
-            assert 1 = 0
+            assert 0 = 1
         end
     end
 
@@ -90,8 +90,10 @@ func assert_not_ocean{range_check_ptr}(x : felt, y : felt) -> ():
     let (elevation) = get_elevation(x_frac, y_frac)
     let (condition_1) = is_nn(elevation)
 
-    with_attr error_message("this plot elevation corresponds to an ocean plot"):
-        assert condition_1 = FALSE
+    if condition_1 == FALSE:
+        with_attr error_message("this plot elevation corresponds to an ocean plot"):
+            assert 0 = 1
+        end
     end
     return ()
 end

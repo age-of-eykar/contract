@@ -80,3 +80,7 @@ func get_alpha{range_check_ptr}(x: felt, y: felt) -> (alpha: felt, sqrt_alpha: f
     let (sqrt_alpha) = to_felt(temp + THOUSAND)
     return (sqrt_alpha * sqrt_alpha, sqrt_alpha)
 end
+
+func get_k_modifier{range_check_ptr}(x: felt, y: felt) -> (k: felt):
+    return (1000)
+end
