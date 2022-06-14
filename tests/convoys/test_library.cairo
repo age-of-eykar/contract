@@ -12,6 +12,7 @@ from contracts.convoys.library import (
     contains_convoy,
     convoy_can_access,
     get_convoy_strength,
+    get_convoy_protection,
     write_conveyables_to_arr,
     get_conveyables,
     create_convoy,
@@ -85,6 +86,16 @@ func test_get_convoy_strength{syscall_ptr : felt*, range_check_ptr, pedersen_ptr
 end
 
 @view
+func test_get_convoy_protection{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(
+    ):
+    alloc_locals
+    let (convoy_id) = create_mint_convoy(123, 2, -3)
+    let (protection) = get_convoy_protection(convoy_id)
+    assert protection = 10
+    return ()
+end
+
+@view
 func test_get_conveyables{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
     let (convoy_id) = create_mint_convoy(123, 2, -3)
@@ -97,7 +108,9 @@ func test_get_conveyables{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
 end
 
 @view
-func test_write_conveyables_to_arr{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+func test_write_conveyables_to_arr{
+    syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*
+}():
     alloc_locals
     let (convoy_id) = create_mint_convoy(123, 2, -3)
     let (conveyables : Fungible*) = alloc()
