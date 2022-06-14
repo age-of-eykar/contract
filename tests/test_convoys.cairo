@@ -4,7 +4,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 from contracts.convoys.factory import create_mint_convoy
-from contracts.convoys.conveyables.human import Human
+from contracts.convoys.conveyables.fungibles.human import Human
 from contracts.convoys.library import (
     get_convoys,
     contains_convoy,

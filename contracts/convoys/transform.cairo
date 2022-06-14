@@ -2,7 +2,7 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
-from contracts.convoys.conveyables import Conveyable
+from contracts.convoys.conveyables import Fungible
 from starkware.starknet.common.syscalls import get_block_timestamp, get_caller_address
 from contracts.convoys.library import (
     get_conveyables,
@@ -19,7 +19,7 @@ func transform{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
     output_sizes_len : felt,
     output_sizes : felt*,
     output_len : felt,
-    output : Conveyable*,
+    output : Fungible*,
 ) -> (convoy_ids_len : felt, convoy_ids : felt*):
     alloc_locals
     # first we need to ensure that the transformation is valid
@@ -59,7 +59,7 @@ func assert_can_spend_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
 end
 
 func write_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    len_output_sizes : felt, output_sizes : felt*, output : Conveyable*, owner : felt
+    len_output_sizes : felt, output_sizes : felt*, output : Fungible*, owner : felt
 ) -> (convoy_ids_len : felt, convoy_ids : felt*):
     # Create convoys with the given conveyables
     #
@@ -74,7 +74,7 @@ end
 func _write_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     len_output_sizes : felt,
     output_sizes : felt*,
-    output : Conveyable*,
+    output : Fungible*,
     owner : felt,
     timestamp : felt,
 ) -> (convoy_ids_len : felt, convoy_ids : felt*):
@@ -90,7 +90,7 @@ func _write_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     let (convoy_ids_len, convoy_ids) = _write_convoys(
         len_output_sizes - 1,
         output_sizes + 1,
-        output + output_len * Conveyable.SIZE,
+        output + output_len * Fungible.SIZE,
         owner,
         timestamp,
     )
@@ -100,7 +100,7 @@ end
 
 func to_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_ids_len : felt, convoy_ids : felt*
-) -> (len_conveyables : felt, conveyables : Conveyable*):
+) -> (len_conveyables : felt, conveyables : Fungible*):
     # Gets the conveyables for the given convoy ids.
     #
     #   Parameters:
@@ -111,7 +111,7 @@ func to_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     #     len_conveyables: The length of the conveyables.
     #     conveyables: The conveyables.
     if convoy_ids_len == 0:
-        let (conveyables : Conveyable*) = alloc()
+        let (conveyables : Fungible*) = alloc()
         return (0, conveyables)
     end
     alloc_locals
@@ -123,14 +123,14 @@ func to_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
 end
 
 func assert_included{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    len_a : felt, a : Conveyable*, len_b : felt, b : Conveyable*
+    len_a : felt, a : Fungible*, len_b : felt, b : Fungible*
 ) -> ():
     # Assert that B includes A
     #
     #   Parameters:
     #     len: length of arrays
-    #     a: array of Conveyable objects
-    #     b: array of Conveyable objects
+    #     a: array of Fungible objects
+    #     b: array of Fungible objects
     if len_a == 0:
         return ()
     end
@@ -139,14 +139,14 @@ func assert_included{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
 end
 
 func assert_contained{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    conveyable : Conveyable, array_len : felt, array : Conveyable*
+    conveyable : Fungible, array_len : felt, array : Fungible*
 ) -> ():
-    # Assert that the array contains the given Conveyable
+    # Assert that the array contains the given Fungible
     #
     #   Parameters:
-    #     conveyable: Conveyable object
+    #     conveyable: Fungible object
     #     array_len: length of array
-    #     array: array of Conveyable objects
+    #     array: array of Fungible objects
     if array_len == 0:
         with_attr error_message("incorrect array inclusion"):
             assert 1 = 0
@@ -162,8 +162,8 @@ func assert_contained{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 end
 
 func compact_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    conveyables_len : felt, conveyables : Conveyable*
-) -> (compacted_len : felt, compacted : Conveyable*):
+    conveyables_len : felt, conveyables : Fungible*
+) -> (compacted_len : felt, compacted : Fungible*):
     # Compact the conveyables array into an array without duplication
     #
     #   Parameters:
@@ -174,11 +174,11 @@ func compact_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     #     compacted_len: length of compacted array
     #     compacted: array of compacted conveyables
     if conveyables_len == 0:
-        let (compacted : Conveyable*) = alloc()
+        let (compacted : Fungible*) = alloc()
         return (0, compacted)
     else:
         let (rest_len, rest) = compact_conveyables(conveyables_len - 1, conveyables)
-        let (compacted_len : felt, compacted : Conveyable*) = add_single(
+        let (compacted_len : felt, compacted : Fungible*) = add_single(
             conveyables[conveyables_len - 1], rest_len, rest
         )
         return (compacted_len, compacted)
@@ -186,8 +186,8 @@ func compact_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 end
 
 func add_single{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    conveyable : Conveyable, conveyables_len : felt, conveyables : Conveyable*
-) -> (added_len : felt, added : Conveyable*):
+    conveyable : Fungible, conveyables_len : felt, conveyables : Fungible*
+) -> (added_len : felt, added : Fungible*):
     # Add the conveyable to the list of conveyables and merge conveyables of same type
     #
     #   Parameters:
@@ -202,36 +202,36 @@ func add_single{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
     # change this condition for non fungible resources support
     if conveyable.type == -1:
         assert conveyables[conveyables_len] = conveyable
-        return (conveyables_len + 1, conveyables + Conveyable.SIZE)
+        return (conveyables_len + 1, conveyables + Fungible.SIZE)
     else:
         let (amount, len_purified, purified) = extract_fungible(
             conveyable.type, conveyables_len, conveyables
         )
-        assert purified[len_purified] = Conveyable(type=conveyable.type, data=amount + conveyable.data)
+        assert purified[len_purified] = Fungible(type=conveyable.type, data=amount + conveyable.data)
         return (len_purified + 1, purified)
     end
 end
 
 func extract_fungible{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    type : felt, len_conveyables : felt, conveyables : Conveyable*
-) -> (amount : felt, len_purified : felt, purified : Conveyable*):
-    # Extract this fungible from the Conveyables list
+    type : felt, len_conveyables : felt, conveyables : Fungible*
+) -> (amount : felt, len_purified : felt, purified : Fungible*):
+    # Extract this fungible from the Fungibles list
     #
     #   Parameters:
     #       type: The type of fungible to extract
-    #       len_conveyables: The length of the Conveyables list
-    #       conveyables: The Conveyables list
+    #       len_conveyables: The length of the Fungibles list
+    #       conveyables: The Fungibles list
     #
     #   Returns:
     #       amount: The amount of fungible of the given type
-    #       len_purified: The length of the purified Conveyables list
-    #       purified: The purified Conveyables list
+    #       len_purified: The length of the purified Fungibles list
+    #       purified: The purified Fungibles list
     if len_conveyables == 0:
-        let (purified : Conveyable*) = alloc()
+        let (purified : Fungible*) = alloc()
         return (0, 0, purified)
     else:
-        let elt : Conveyable = conveyables[len_conveyables - 1]
-        let (amount : felt, len_purified : felt, purified : Conveyable*) = extract_fungible(
+        let elt : Fungible = conveyables[len_conveyables - 1]
+        let (amount : felt, len_purified : felt, purified : Fungible*) = extract_fungible(
             type, len_conveyables - 1, conveyables
         )
         if elt.type == type:

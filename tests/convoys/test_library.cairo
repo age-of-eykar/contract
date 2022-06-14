@@ -4,8 +4,8 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 from contracts.convoys.factory import create_mint_convoy
-from contracts.convoys.conveyables import Conveyable
-from contracts.convoys.conveyables.human import Human
+from contracts.convoys.conveyables import Fungible
+from contracts.convoys.conveyables.fungibles.human import Human
 from contracts.convoys.library import (
     get_convoys,
     contains_convoy,
@@ -99,10 +99,10 @@ end
 func test_write_conveyables_to_arr{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
     let (convoy_id) = create_mint_convoy(123, 2, -3)
-    let (conveyables : Conveyable*) = alloc()
+    let (conveyables : Fungible*) = alloc()
     let (conveyables_len) = write_conveyables_to_arr(convoy_id, 0, conveyables)
     assert conveyables_len = 1
-    assert [conveyables] = Conveyable(Human.type, 10)
+    assert [conveyables] = Fungible(Human.type, 10)
     return ()
 end
 

@@ -9,9 +9,9 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.math import assert_le, assert_not_equal
 from starkware.cairo.common.math_cmp import is_not_zero
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
-from contracts.convoys.conveyables.human import Human
-from contracts.convoys.conveyables.wood import Wood
-from contracts.convoys.conveyables import Conveyable
+from contracts.convoys.conveyables.fungibles.human import Human
+from contracts.convoys.conveyables.fungibles.wood import Wood
+from contracts.convoys.conveyables import Fungible
 
 struct ConvoyMeta:
     member owner : felt  # address
@@ -134,7 +134,7 @@ end
 @view
 func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt
-) -> (conveyables_len : felt, conveyables : Conveyable*):
+) -> (conveyables_len : felt, conveyables : Fungible*):
     # Gets the conveyables of a convoy [tested: test_get_conveyables]
     #
     #   Parameters:
@@ -144,7 +144,7 @@ func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
     #       conveyables_len : length of the fungible conveyables array
     #       conveyables : array of fungible conveyable_id
     alloc_locals
-    let (conveyables : Conveyable*) = alloc()
+    let (conveyables : Fungible*) = alloc()
     let (conveyables_len) = write_conveyables_to_arr(convoy_id, 0, conveyables)
     return (conveyables_len, conveyables)
 end
@@ -230,7 +230,7 @@ func create_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
 end
 
 func write_conveyables_to_arr{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*
+    convoy_id : felt, conveyables_len : felt, conveyables : Fungible*
 ) -> (conveyables_len : felt):
     # Writes the conveyables of a convoy to an array [tested: test_write_conveyables_to_arr]
     #
@@ -246,7 +246,7 @@ func write_conveyables_to_arr{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
 end
 
 func write_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_id : felt, conveyables_len : felt, conveyables : Conveyable*
+    convoy_id : felt, conveyables_len : felt, conveyables : Fungible*
 ) -> ():
     # Writes the conveyables to a convoy
     #
