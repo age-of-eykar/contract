@@ -5,7 +5,7 @@ from starkware.cairo.common.pow import pow
 from starkware.cairo.common.math_cmp import is_nn
 from starkware.cairo.common.bool import TRUE
 from contracts.map.biomes import get_temperature
-from contracts.fixed_point_numbers import (
+from contracts.utils.fixed_point_numbers import (
     Math64x61_div as div,
     Math64x61_toFelt as to_felt,
     Math64x61_mul as mul
