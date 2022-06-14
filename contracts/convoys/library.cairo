@@ -10,6 +10,7 @@ from starkware.cairo.common.math import assert_le, assert_not_equal
 from starkware.cairo.common.math_cmp import is_not_zero
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 from contracts.convoys.conveyables.fungibles import Fungibles
+from contracts.convoys.conveyables.fungibles.soldier import Soldier, soldier_balances
 from contracts.convoys.conveyables.fungibles.human import Human, human_balances
 from contracts.convoys.conveyables.fungibles.wood import Wood, wood_balances
 from contracts.convoys.conveyables import Fungible
@@ -129,7 +130,25 @@ func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     #       strength : strength of the convoy
 
     let (human_strength) = Human.strength(convoy_id)
-    return (human_strength)
+    let (soldier_strength) = Soldier.strength(convoy_id)
+    return (human_strength + soldier_strength)
+end
+
+@view
+func get_convoy_protection{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt
+) -> (protection : felt):
+    # Gets the strength of a convoy [tested: test_get_convoy_protection]
+    #
+    #   Parameters:
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       protection : protection of the convoy
+
+    let (human_protection) = Human.protection(convoy_id)
+    let (soldier_protection) = Soldier.protection(convoy_id)
+    return (human_protection + soldier_protection)
 end
 
 @view
