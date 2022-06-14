@@ -4,7 +4,8 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 from contracts.convoys.factory import create_mint_convoy
-from contracts.convoys.conveyables.fungibles.human import Human
+from contracts.convoys.conveyables.fungibles import Fungibles
+from contracts.convoys.conveyables.fungibles.human import Human, human_balances
 from contracts.convoys.library import (
     get_convoys,
     contains_convoy,
@@ -99,7 +100,7 @@ func test_create_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Has
     alloc_locals
 
     let (convoy_id) = create_convoy(123, 0)
-    Human.set(convoy_id, 27)
+    Fungibles.set(human_balances.addr, convoy_id, 27)
     bind_convoy(convoy_id, 3, 2)
 
     let (conveyables_len, conveyables) = get_conveyables(convoy_id)

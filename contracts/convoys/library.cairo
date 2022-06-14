@@ -9,8 +9,9 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.math import assert_le, assert_not_equal
 from starkware.cairo.common.math_cmp import is_not_zero
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
-from contracts.convoys.conveyables.fungibles.human import Human
-from contracts.convoys.conveyables.fungibles.wood import Wood
+from contracts.convoys.conveyables.fungibles import Fungibles
+from contracts.convoys.conveyables.fungibles.human import Human, human_balances
+from contracts.convoys.conveyables.fungibles.wood import Wood, wood_balances
 from contracts.convoys.conveyables import Fungible
 
 struct ConvoyMeta:
@@ -240,8 +241,12 @@ func write_conveyables_to_arr{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
     #   Returns:
     #       conveyables_len : length of the fungible conveyables array
     #       conveyables : array of fungible conveyable_id
-    let (conveyables_len) = Human.append_meta(convoy_id, conveyables_len, conveyables)
-    let (conveyables_len) = Wood.append_meta(convoy_id, conveyables_len, conveyables)
+    let (conveyables_len) = Fungibles.append_meta(
+        human_balances.addr, Human.type, convoy_id, conveyables_len, conveyables
+    )
+    let (conveyables_len) = Fungibles.append_meta(
+        wood_balances.addr, Wood.type, convoy_id, conveyables_len, conveyables
+    )
     return (conveyables_len)
 end
 
@@ -266,13 +271,11 @@ func write_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
     tempvar pedersen_ptr = pedersen_ptr
     tempvar range_check_ptr = range_check_ptr
     if conveyable.type == Human.type:
-        let (current_amount) = Human.amount(convoy_id)
-        Human.set(convoy_id, current_amount + conveyable.data)
+        Fungibles.add(human_balances.addr, convoy_id, conveyable.data)
         return write_conveyables(convoy_id, conveyables_len - 1, conveyables)
     end
     if conveyable.type == Wood.type:
-        let (current_amount) = Wood.amount(convoy_id)
-        Wood.set(convoy_id, current_amount + conveyable.data)
+        Fungibles.add(wood_balances.addr, convoy_id, conveyable.data)
         return write_conveyables(convoy_id, conveyables_len - 1, conveyables)
     end
 

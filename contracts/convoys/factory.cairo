@@ -6,7 +6,9 @@ from starkware.starknet.common.syscalls import get_caller_address, get_block_tim
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
 from contracts.convoys.library import create_convoy, bind_convoy
-from contracts.convoys.conveyables.fungibles.human import Human
+from contracts.convoys.conveyables import Fungible
+from contracts.convoys.conveyables.fungibles import Fungibles
+from contracts.convoys.conveyables.fungibles.human import Human, human_balances
 
 func create_mint_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     owner : felt, x : felt, y : felt
@@ -21,7 +23,7 @@ func create_mint_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     # only content of the convoy is 10 humans
     let (timestamp) = get_block_timestamp()
     let (convoy_id) = create_convoy(owner, timestamp)
-    Human.set(convoy_id, 10)
+    Fungibles.set(human_balances.addr, convoy_id, 10)
     bind_convoy(convoy_id, x, y)
 
     return (convoy_id)
