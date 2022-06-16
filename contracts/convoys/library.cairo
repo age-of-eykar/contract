@@ -29,7 +29,7 @@ func get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 ) -> (convoys_id_len : felt, convoys_id : felt*):
     # Gets convoys located at a given location [tested: test_create_mint]
     #
-    #   Parameters:
+    # Parameters:
     #       x : x coordinate of the location
     #       y : y coordinate of the location
     #
@@ -60,7 +60,7 @@ func contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
 ) -> (contained : felt):
     # Checks if a convoy is located at a given location [tested: test_contains_convoy]
     #
-    #   Parameters:
+    # Parameters:
     #       x : x coordinate of the location
     #       y : y coordinate of the location
     #       convoy_id : convoy_id
@@ -89,7 +89,7 @@ func convoy_can_access{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
 ) -> (bool : felt):
     # Checks if a convoy can access a location [tested: test_convoy_can_access]
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id : convoy_id
     #       x : x coordinate of the location
     #       y : y coordinate of the location
@@ -123,7 +123,7 @@ func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 ) -> (strength : felt):
     # Gets the strength of a convoy [tested: test_get_convoy_strength]
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id : convoy_id
     #
     #   Returns:
@@ -140,7 +140,7 @@ func get_convoy_protection{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
 ) -> (protection : felt):
     # Gets the strength of a convoy [tested: test_get_convoy_protection]
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id : convoy_id
     #
     #   Returns:
@@ -157,7 +157,7 @@ func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
 ) -> (conveyables_len : felt, conveyables : Fungible*):
     # Gets the conveyables of a convoy [tested: test_get_conveyables]
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id : convoy_id
     #
     #   Returns:
@@ -175,7 +175,7 @@ func assert_can_spend_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
 ) -> ():
     # Check if a convoy can be spent by a specific user
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id (felt) : The convoy to move
     #       spender (felt) : The user who wants to spend the convoy
 
@@ -193,7 +193,7 @@ func assert_can_move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ra
 ) -> ():
     # Check if a convoy can be spent by a specific user
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id (felt) : The convoy to move
     #       spender (felt) : The user who wants to spend the convoy
 
@@ -215,7 +215,7 @@ func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 ) -> ():
     # Moves the convoy to the location if caller is the owner
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id (felt) : The convoy to move
     #       source_x (felt) : The x coordinate of the source location
     #       source_y (felt) : The y coordinate of the source location
@@ -236,7 +236,7 @@ func create_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
 ) -> (convoy_id : felt):
     # Creates a convoy [tested: test_create_convoy]
     #
-    #   Parameters:
+    # Parameters:
     #       owner (felt) : The owner of the convoy
     #       availability (felt) : The timestamp when the convoy is available
     #
@@ -254,7 +254,7 @@ func burn_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
 ) -> ():
     # Burns a convoy [tested: test_burn_convoy]
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id (felt) : The convoy to burn
     let (meta : ConvoyMeta) = convoy_meta.read(convoy_id)
     # we only rewrite the owner to save on fees
@@ -267,7 +267,7 @@ func write_conveyables_to_arr{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
 ) -> (conveyables_len : felt):
     # Writes the conveyables of a convoy to an array [tested: test_write_conveyables_to_arr]
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id : convoy_id
     #
     #   Returns:
@@ -287,7 +287,7 @@ func write_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
 ) -> ():
     # Writes the conveyables to a convoy
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id : convoy_id
     #
     #   Returns:
@@ -323,7 +323,7 @@ func bind_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     # Binds the convoy to the location [tested: test_bind_convoy]
     # If the location is already bound, it will be chained
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id (felt) : The convoy to bind
     #       x (felt) : The x coordinate of the location
     #       y (felt) : The y coordinate of the location
@@ -339,7 +339,7 @@ func unsafe_move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
 ) -> ():
     # Moves the convoy from source to target [tested: test_unsafe_move_convoy]
     #
-    #   Parameters:
+    # Parameters:
     #       convoy_id (felt) : The convoy to move
     #       source_x (felt) : The x coordinate of the source location
     #       source_y (felt) : The y coordinate of the source location

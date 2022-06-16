@@ -63,7 +63,7 @@ func write_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
 ) -> (convoy_ids_len : felt, convoy_ids : felt*):
     # Create convoys with the given conveyables
     #
-    #   Parameters:
+    # Parameters:
     #     len_output_sizes: length of output_sizes
     #     output_sizes: sizes of the output convoys
     #     output: the output convoys
@@ -103,7 +103,7 @@ func to_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
 ) -> (len_conveyables : felt, conveyables : Fungible*):
     # Gets the conveyables for the given convoy ids.
     #
-    #   Parameters:
+    # Parameters:
     #     convoy_ids_len: The length of the convoy ids.
     #     convoy_ids: The convoy ids.
     #
@@ -127,7 +127,7 @@ func assert_included{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
 ) -> ():
     # Assert that B includes A
     #
-    #   Parameters:
+    # Parameters:
     #     len: length of arrays
     #     a: array of Fungible objects
     #     b: array of Fungible objects
@@ -143,7 +143,7 @@ func assert_contained{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 ) -> ():
     # Assert that the array contains the given Fungible
     #
-    #   Parameters:
+    # Parameters:
     #     conveyable: Fungible object
     #     array_len: length of array
     #     array: array of Fungible objects
@@ -166,7 +166,7 @@ func compact_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 ) -> (compacted_len : felt, compacted : Fungible*):
     # Compact the conveyables array into an array without duplication
     #
-    #   Parameters:
+    # Parameters:
     #     conveyables_len: length of conveyables array
     #     conveyables: array of conveyables
     #
@@ -190,7 +190,7 @@ func add_single{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
 ) -> (added_len : felt, added : Fungible*):
     # Add the conveyable to the list of conveyables and merge conveyables of same type
     #
-    #   Parameters:
+    # Parameters:
     #       conveyable: the conveyable to add
     #       conveyables_len: the length of the conveyables array
     #       conveyables: the conveyables array (pointer at the start)
@@ -217,7 +217,7 @@ func extract_fungible{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 ) -> (amount : felt, len_purified : felt, purified : Fungible*):
     # Extract this fungible from the Fungibles list
     #
-    #   Parameters:
+    # Parameters:
     #       type: The type of fungible to extract
     #       len_conveyables: The length of the Fungibles list
     #       conveyables: The Fungibles list

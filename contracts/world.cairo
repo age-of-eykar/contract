@@ -28,7 +28,7 @@ func get_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}
 ) -> (plot : Plot):
     # Gets a plot object at the given coordinates
     #
-    #   Parameters:
+    # Parameters:
     #       x (felt): The x coordinate of the plot
     #       y (felt): The y coordinate of the plot
     #

@@ -11,6 +11,7 @@ from contracts.convoys.library import (
     get_convoy_protection,
     assert_can_spend_convoy,
     contains_convoy,
+    burn_convoy,
     convoy_meta,
     ConvoyMeta,
 )
@@ -19,6 +20,15 @@ from contracts.convoys.library import (
 func attack{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     attacker : felt, target : felt, x : felt, y : felt
 ) -> ():
+    # Attack target convoy with attacker convoy (which needs to belong to the caller)
+    # targets needs to be part of attacker plot
+    #
+    # Parameters:
+    #  attacker: The attacker's convoy
+    #  target: The target's convoy
+    #  x: The x coordinate of the target's convoy
+    #  y: The y coordinate of the target's convoy
+
     alloc_locals
     let (caller) = get_caller_address()
 
@@ -74,6 +84,10 @@ end
 func defender_protection_modifier{
     syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
 }(defender_protection : felt) -> (modified_protection : felt):
+    # Modify the defender's protection to give a bonus to small defenders and a malus to big defenders
+    #
+    # Parameters:
+    #  defender_protection: The defender's protection
     let (a : felt) = sqrt(100 * defender_protection)
     let (b : felt, _) = unsigned_div_rem(defender_protection, 2)
     return (a + b)
@@ -87,6 +101,15 @@ func new_max_protection{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     target_protection,
     modified_target_protection,
 ) -> (boundary : felt):
+    # Calculate the new max protection for the winner
+    #
+    # Parameters:
+    #  winner_id: The id of the winner
+    #  attacker_id: The id of the attacker
+    #  winner_protection: The winner's protection
+    #  attacker_protection: The attacker's protection
+    #  target_protection: The target's protection
+    #  modified_target_protection: The modified target's protection
     if winner_id == attacker_id:
         return (winner_protection)
     else:
@@ -100,6 +123,16 @@ end
 func perform_turns{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     a_id, a_strength, a_protection, b_id, b_strength, b_protection
 ) -> (winner_id, loser_id, a_protection):
+    # Perform the turns logic until a convoy loses
+    #
+    # Parameters:
+    #  a_id: The id of the attacker
+    #  a_strength: The attacker's strength
+    #  a_protection: The attacker's protection
+    #  b_id: The id of the defender
+    #  b_strength: The defender's strength
+    #  b_protection: The defender's protection
+
     let (test : felt) = is_le(b_protection, a_strength)
     if test == TRUE:
         let new_a_protection = b_protection - a_strength
@@ -113,19 +146,22 @@ end
 func copy_profits{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     loser_id, winner_id
 ) -> ():
+    # Copy the conveyables with no protection from the loser to the winner
+    #
+    # Parameters:
+    #  loser_id: The id of the loser
+    #  winner_id: The id of the winner
     # todo
     ret
 end
 
 func kill_soldiers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    loser_id, winner_id
+    winner_id, protection_max
 ) -> ():
-    # todo
-    ret
-end
-
-func burn_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(convoy_id) -> (
-    ):
-    # todo
+    # Kill conveyables with protection until protection <= protection_max
+    #
+    # Parameters:
+    #  winner_id: The id of the winner
+    #  protection_max: The max protection
     ret
 end

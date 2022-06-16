@@ -22,7 +22,7 @@ func get_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_pt
 ):
     # Gets the colony object after multiple redirections
     #
-    #   Parameters:
+    # Parameters:
     #       id (felt): the colony id
     #
     #   Returns:

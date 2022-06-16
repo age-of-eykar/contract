@@ -12,7 +12,7 @@ func get_distance{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
         xmin : felt, ymin : felt, xmax : felt, ymax : felt) -> (distance : felt):
     # Calculate an approximated ineteger distance between two Cartesian coordinates
     #
-    #   Parameters:
+    # Parameters:
     #       xmin (felt): value on the x axis of the first point
     #       ymin (felt): value on the y axis of the first point
     #       xmax (felt): value on the x axis of the second point
