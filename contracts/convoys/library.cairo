@@ -249,6 +249,19 @@ func create_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
     return (convoy_id)
 end
 
+func burn_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt
+) -> ():
+    # Burns a convoy [tested: test_burn_convoy]
+    #
+    #   Parameters:
+    #       convoy_id (felt) : The convoy to burn
+    let (meta : ConvoyMeta) = convoy_meta.read(convoy_id)
+    # we only rewrite the owner to save on fees
+    convoy_meta.write(convoy_id, ConvoyMeta(0, meta.availability))
+    return ()
+end
+
 func write_conveyables_to_arr{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, conveyables_len : felt, conveyables : Fungible*
 ) -> (conveyables_len : felt):

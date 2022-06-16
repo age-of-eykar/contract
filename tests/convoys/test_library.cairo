@@ -19,6 +19,7 @@ from contracts.convoys.library import (
     bind_convoy,
     unsafe_move_convoy,
     move_convoy,
+    burn_convoy,
 )
 
 @view
@@ -134,6 +135,22 @@ func test_create_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Has
     assert humans.type = Human.type
     assert humans.data = 27
 
+    return ()
+end
+
+@view
+func test_burn_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
+    %{
+        stop_prank_callable = start_prank(123)
+        warp(0)
+    %}
+    let (convoy_id) = create_mint_convoy(123, 0, 0)
+    burn_convoy(convoy_id)
+    %{ warp(1) %}
+    %{ expect_revert("TRANSACTION_FAILED") %}
+    move_convoy(convoy_id, 0, 0, -10, 27)
+    %{ stop_prank_callable() %}
     return ()
 end
 
