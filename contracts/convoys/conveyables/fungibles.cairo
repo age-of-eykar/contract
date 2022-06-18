@@ -90,6 +90,21 @@ namespace Fungibles:
         return ()
     end
 
+    func copy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        storage_var : codeoffset, source_id : felt, target_id : felt
+    ) -> ():
+        # Copy a conveyable from one convoy to another
+        #
+        # Parameters:
+        #   storage_var: The storage variable to use
+        #   source_id: The ID of the convoy to transfer from
+        #   target_id: The ID of the convoy to transfer to
+        let (source_amount) = Storage.read(storage_var, 1, cast(new (source_id), felt*))
+        let (target_amount) = Storage.read(storage_var, 1, cast(new (target_id), felt*))
+        Storage.write(storage_var, 1, new (target_id), target_amount + source_amount)
+        return ()
+    end
+
     func burn{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         storage_var : codeoffset, convoy_id : felt
     ) -> ():

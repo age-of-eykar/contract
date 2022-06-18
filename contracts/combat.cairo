@@ -6,6 +6,8 @@ from starkware.cairo.common.math import sqrt, unsigned_div_rem
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.math import assert_le
 from starkware.cairo.common.math_cmp import is_le
+from contracts.convoys.conveyables.fungibles import Fungibles
+from contracts.convoys.conveyables.fungibles.wood import Wood, wood_balances
 from contracts.convoys.library import (
     get_convoy_strength,
     get_convoy_protection,
@@ -151,8 +153,8 @@ func copy_profits{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     # Parameters:
     #  loser_id: The id of the loser
     #  winner_id: The id of the winner
-    # todo
-    ret
+    Fungibles.copy(wood_balances.addr, loser_id, winner_id)
+    return ()
 end
 
 func kill_soldiers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
