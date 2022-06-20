@@ -8,6 +8,8 @@ from starkware.cairo.common.math import assert_le
 from starkware.cairo.common.math_cmp import is_le
 from contracts.convoys.conveyables.fungibles import Fungibles
 from contracts.convoys.conveyables.fungibles.wood import Wood, wood_balances
+from contracts.convoys.conveyables.fungibles.human import Human, human_balances
+from contracts.convoys.conveyables.fungibles.soldier import Soldier, soldier_balances
 from contracts.convoys.library import (
     get_convoy_strength,
     get_convoy_protection,
@@ -67,17 +69,15 @@ func attack{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         modified_target_protection,
     )
 
-    let (protection_max) = new_max_protection(
-        winner_id,
-        attacker,
-        winner_protection,
-        attacker_protection,
-        target_protection,
-        modified_target_protection,
-    )
+    local original_protection : felt
+    if winner_id == attacker:
+        assert original_protection = attacker_protection
+    else:
+        assert original_protection = target_protection
+    end
 
     copy_profits(loser_id, winner_id)
-    kill_soldiers(winner_id, protection_max)
+    kill_soldiers(winner_id, winner_protection, original_protection)
     burn_convoy(loser_id)
 
     return ()
@@ -93,33 +93,6 @@ func defender_protection_modifier{
     let (a : felt) = sqrt(100 * defender_protection)
     let (b : felt, _) = unsigned_div_rem(defender_protection, 2)
     return (a + b)
-end
-
-func new_max_protection{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    winner_id,
-    attacker_id,
-    winner_protection,
-    attacker_protection,
-    target_protection,
-    modified_target_protection,
-) -> (boundary : felt):
-    # Calculate the new max protection for the winner
-    #
-    # Parameters:
-    #  winner_id: The id of the winner
-    #  attacker_id: The id of the attacker
-    #  winner_protection: The winner's protection
-    #  attacker_protection: The attacker's protection
-    #  target_protection: The target's protection
-    #  modified_target_protection: The modified target's protection
-    if winner_id == attacker_id:
-        return (winner_protection)
-    else:
-        let (boundary : felt, _) = unsigned_div_rem(
-            target_protection * winner_protection, modified_target_protection
-        )
-        return (boundary)
-    end
 end
 
 func perform_turns{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -158,12 +131,22 @@ func copy_profits{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
 end
 
 func kill_soldiers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    winner_id, protection_max
+    winner_id, ratio_num, ratio_den
 ) -> ():
-    # Kill conveyables with protection until protection <= protection_max
+    # Kill soldier conveyables in proportion to ratio
     #
     # Parameters:
     #  winner_id: The id of the winner
-    #  protection_max: The max protection
-    ret
+    #  ratio_num: The numerator of the ratio
+    #  ratio_den: The denominator of the ratio
+
+    let (human_amount : felt) = Fungibles.amount(human_balances.addr, winner_id)
+    let (divided : felt, _) = unsigned_div_rem(human_amount * ratio_num, ratio_den)
+    Fungibles.set(human_balances.addr, winner_id, divided)
+
+    let (soldier_amount) = Fungibles.amount(soldier_balances.addr, winner_id)
+    let (divided : felt, _) = unsigned_div_rem(soldier_amount * ratio_num, ratio_den)
+    Fungibles.set(soldier_balances.addr, winner_id, divided)
+
+    return ()
 end

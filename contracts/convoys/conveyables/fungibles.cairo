@@ -83,8 +83,8 @@ namespace Fungibles:
         #   storage_var: The storage variable to use
         #   source_id: The ID of the convoy to transfer from
         #   target_id: The ID of the convoy to transfer to
-        let (source_amount) = Storage.read(storage_var, 1, cast(new (source_id), felt*))
-        let (target_amount) = Storage.read(storage_var, 1, cast(new (target_id), felt*))
+        let (source_amount) = Storage.read(storage_var, 1, new (source_id))
+        let (target_amount) = Storage.read(storage_var, 1, new (target_id))
         Storage.write(storage_var, 1, new (source_id), 0)
         Storage.write(storage_var, 1, new (target_id), target_amount + source_amount)
         return ()
@@ -98,9 +98,10 @@ namespace Fungibles:
         # Parameters:
         #   storage_var: The storage variable to use
         #   source_id: The ID of the convoy to transfer from
-        #   target_id: The ID of the convoy to transfer to
-        let (source_amount) = Storage.read(storage_var, 1, cast(new (source_id), felt*))
-        let (target_amount) = Storage.read(storage_var, 1, cast(new (target_id), felt*))
+        #   target_id: The ID of the convoy to transfer
+        alloc_locals
+        let (source_amount) = Storage.read(storage_var, 1, new (source_id))
+        let (target_amount) = Storage.read(storage_var, 1, new (target_id))
         Storage.write(storage_var, 1, new (target_id), target_amount + source_amount)
         return ()
     end
