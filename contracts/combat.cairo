@@ -73,9 +73,8 @@ func attack{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     if winner_id == attacker:
         assert original_protection = attacker_protection
     else:
-        assert original_protection = target_protection
+        assert original_protection = modified_target_protection
     end
-
     copy_profits(loser_id, winner_id)
     kill_soldiers(winner_id, winner_protection, original_protection)
     burn_convoy(loser_id)
@@ -95,6 +94,24 @@ func defender_protection_modifier{
     return (a + b)
 end
 
+func substract_unsigned{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt
+) -> (z : felt):
+    # Subtract y to x, but the returned value is 0 if y >= x
+    #
+    # Parameters:
+    #  x: The first value
+    #  y: The second value
+    #
+    # Returns:
+    #  z: The difference of x and y
+    let (test : felt) = is_le(y, x)
+    if test == TRUE:
+        return (x - y)
+    end
+    return (0)
+end
+
 func perform_turns{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     a_id, a_strength, a_protection, b_id, b_strength, b_protection
 ) -> (winner_id, loser_id, a_protection):
@@ -110,11 +127,11 @@ func perform_turns{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
 
     let (test : felt) = is_le(b_protection, a_strength)
     if test == TRUE:
-        let new_a_protection = b_protection - a_strength
+        let (new_a_protection) = substract_unsigned(b_protection, a_strength)
         let (new_a_strength, _) = unsigned_div_rem(b_strength * new_a_protection, b_protection)
         return perform_turns(b_id, new_a_strength, new_a_protection, a_id, a_strength, a_protection)
     else:
-        return (a_id, b_id, a_protection)
+        return (b_id, a_id, b_protection)
     end
 end
 
