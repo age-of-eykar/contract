@@ -7,7 +7,7 @@ from starkware.cairo.common.registers import get_label_location
 from starkware.cairo.common.alloc import alloc
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.math import assert_le, assert_not_equal
-from starkware.cairo.common.math_cmp import is_not_zero
+from starkware.cairo.common.math_cmp import is_not_zero, is_le
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
 from contracts.convoys.conveyables.fungibles import Fungibles
 from contracts.convoys.conveyables.fungibles.soldier import Soldier, soldier_balances
@@ -167,6 +167,29 @@ func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
     let (conveyables : Fungible*) = alloc()
     let (conveyables_len) = write_conveyables_to_arr(convoy_id, 0, conveyables)
     return (conveyables_len, conveyables)
+end
+
+@view
+func can_spend_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, spender : felt
+) -> (bool : felt):
+    # Check if a convoy can be spent by a specific user
+    #
+    # Parameters:
+    #       convoy_id (felt) : The convoy to move
+    #       spender (felt) : The user who wants to spend the convoy
+    #
+    #   Returns:
+    #       bool (felt) : TRUE if the convoy can be spent, FALSE otherwise
+    alloc_locals
+    let (meta) = convoy_meta.read(convoy_id)
+    if meta.owner != spender:
+        return (FALSE)
+    end
+    let (timestamp) = get_block_timestamp()
+    # check meta.availability <= timestamp
+    let (test) = is_le(meta.availability, timestamp)
+    return (test)
 end
 
 @view

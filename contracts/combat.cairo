@@ -14,11 +14,14 @@ from contracts.convoys.library import (
     get_convoy_strength,
     get_convoy_protection,
     assert_can_spend_convoy,
+    can_spend_convoy,
     contains_convoy,
+    get_convoys,
     burn_convoy,
     convoy_meta,
     ConvoyMeta,
 )
+from contracts.colonies import Colony, get_colony
 
 @external
 func attack{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -166,4 +169,44 @@ func kill_soldiers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
     Fungibles.set(soldier_balances.addr, winner_id, divided)
 
     return ()
+end
+
+func is_puppet_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    colony_id, player
+) -> (bool : felt):
+    # Check if a colony is a puppet of a player
+    #
+    # Parameters:
+    #  colony_id: The id of the colony
+    #  player: The id of the player
+    #
+    # Returns:
+    #  bool: TRUE if the colony is a puppet of the player, FALSE otherwise
+    alloc_locals
+    let (colony : Colony) = get_colony(colony_id)
+    let (convoy_ids_len, convoy_ids) = get_convoys(colony.x, colony.y)
+    let (player_strength, others_protection) = get_puppet_scores(convoy_ids_len, convoy_ids, player)
+    let (test) = is_le(others_protection, player_strength)
+    return (test)
+end
+
+func get_puppet_scores{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_ids_len, convoy_ids : felt*, player
+) -> (player_strength, others_protection):
+    if convoy_ids_len == 0:
+        return (0, 0)
+    end
+    alloc_locals
+    let convoy_id = [convoy_ids]
+    let (player_strength, others_protection) = get_puppet_scores(
+        convoy_ids_len - 1, convoy_ids + 1, player
+    )
+    let (test) = can_spend_convoy(convoy_id, player)
+    if test == TRUE:
+        let (strength) = get_convoy_strength(convoy_id)
+        return (player_strength + strength, others_protection)
+    else:
+        let (protection) = get_convoy_protection(convoy_id)
+        return (player_strength, others_protection + protection)
+    end
 end
