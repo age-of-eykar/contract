@@ -4,12 +4,19 @@ from starkware.starknet.common.syscalls import get_block_timestamp
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
-from contracts.combat import defender_protection_modifier, kill_soldiers, attack, copy_profits
 from contracts.convoys.library import create_convoy, bind_convoy
 from contracts.convoys.conveyables.fungibles import Fungibles
 from contracts.convoys.conveyables.fungibles.wood import Wood, wood_balances
 from contracts.convoys.conveyables.fungibles.human import Human, human_balances
 from contracts.convoys.conveyables.fungibles.soldier import Soldier, soldier_balances
+from contracts.combat import (
+    defender_protection_modifier,
+    kill_soldiers,
+    attack,
+    copy_profits,
+    assert_is_puppet_of,
+)
+from contracts.eykar import mint
 
 @view
 func test_defender_protection_modifier{
@@ -118,5 +125,32 @@ func test_attack{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuilti
     assert amount = 25
 
     %{ stop_prank_callable() %}
+    return ()
+end
+
+@view
+func test_is_puppet_of{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    %{ warp(0) %}
+    alloc_locals
+    %{ stop_prank_callable = start_prank(123) %}
+    mint('hello')
+    %{ stop_prank_callable() %}
+
+    let (timestamp) = get_block_timestamp()
+    let (attacker_convoy) = create_convoy(456, timestamp)
+    Fungibles.set(soldier_balances.addr, attacker_convoy, 25)
+    bind_convoy(attacker_convoy, 0, 0)
+
+    %{ warp(1) %}
+
+    assert_is_puppet_of(1, 456)
+
+    %{ expect_revert("TRANSACTION_FAILED") %}
+
+    let (attacker_convoy) = create_convoy(789, timestamp)
+    Fungibles.set(soldier_balances.addr, attacker_convoy, 1)
+    bind_convoy(attacker_convoy, 0, 0)
+    assert_is_puppet_of(1, 789)
+
     return ()
 end

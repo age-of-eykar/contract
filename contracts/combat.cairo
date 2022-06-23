@@ -171,9 +171,9 @@ func kill_soldiers{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
     return ()
 end
 
-func is_puppet_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func assert_is_puppet_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     colony_id, player
-) -> (bool : felt):
+) -> ():
     # Check if a colony is a puppet of a player
     #
     # Parameters:
@@ -186,8 +186,8 @@ func is_puppet_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_
     let (colony : Colony) = get_colony(colony_id)
     let (convoy_ids_len, convoy_ids) = get_convoys(colony.x, colony.y)
     let (player_strength, others_protection) = get_puppet_scores(convoy_ids_len, convoy_ids, player)
-    let (test) = is_le(others_protection, player_strength)
-    return (test)
+    assert_le(others_protection, player_strength)
+    return ()
 end
 
 func get_puppet_scores{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
