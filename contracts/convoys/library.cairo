@@ -24,6 +24,21 @@ end
 # Getters
 #
 @view
+func get_convoy_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt
+) -> (meta : ConvoyMeta):
+    # Returns the ConvoyMeta of a specific convoy
+    #
+    # Parameters:
+    #       convoy_id : felt
+    #
+    #   Returns:
+    #       meta : ConvoyMeta
+    let (meta : ConvoyMeta) = convoy_meta.read(convoy_id)
+    return (meta)
+end
+
+@view
 func get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     x : felt, y : felt
 ) -> (convoys_id_len : felt, convoys_id : felt*):
