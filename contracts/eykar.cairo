@@ -21,6 +21,7 @@ from contracts.convoys.library import (
     ConvoyMeta,
 )
 from contracts.convoys.factory import create_mint_convoy
+from contracts.combat import attack
 
 #
 # Colonies
