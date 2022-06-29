@@ -4,6 +4,7 @@ from starkware.starknet.common.syscalls import get_block_timestamp
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
+from contracts.convoys.factory import create_mint_convoy
 from contracts.convoys.library import create_convoy, bind_convoy
 from contracts.convoys.conveyables.fungibles import Fungibles
 from contracts.convoys.conveyables.fungibles.wood import Wood, wood_balances
@@ -124,6 +125,19 @@ func test_attack{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuilti
     let (amount) = Fungibles.amount(soldier_balances.addr, convoy1_id)
     assert amount = 25
 
+    %{ stop_prank_callable() %}
+    return ()
+end
+
+@view
+func test_equal_attack{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
+    %{ warp(0) %}
+    let (id1) = create_mint_convoy(1, 0, 0)
+    let (id2) = create_mint_convoy(2, 0, 0)
+    %{ stop_prank_callable = start_prank(2) %}
+    %{ warp(1) %}
+    attack(id2, id1, 0, 0)
     %{ stop_prank_callable() %}
     return ()
 end
