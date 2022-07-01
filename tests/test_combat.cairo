@@ -133,16 +133,18 @@ end
 func test_equal_attack{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
     %{ warp(0) %}
-    let (id1) = create_mint_convoy(1, 0, 0)
-    let (id2) = create_mint_convoy(2, 0, 0)
+    let (target) = create_mint_convoy(1, 0, 0)
+    let (attacker) = create_mint_convoy(2, 0, 0)
     %{ stop_prank_callable = start_prank(2) %}
     %{ warp(1) %}
-    attack(id2, id1, 0, 0)
+    attack(attacker, target, 0, 0)
 
-    let (meta : ConvoyMeta) = get_convoy_meta(id1)
+    let (meta : ConvoyMeta) = get_convoy_meta(target)
     assert 1 = meta.owner
+    let (amount) = Fungibles.amount(human_balances.addr, attacker)
+    assert amount = 10
 
-    let (meta : ConvoyMeta) = get_convoy_meta(id2)
+    let (meta : ConvoyMeta) = get_convoy_meta(attacker)
     assert meta.owner = 0
 
     %{ stop_prank_callable() %}
