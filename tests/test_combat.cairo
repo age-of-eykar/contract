@@ -5,7 +5,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 from contracts.convoys.factory import create_mint_convoy
-from contracts.convoys.library import create_convoy, bind_convoy
+from contracts.convoys.library import create_convoy, bind_convoy, get_convoy_meta, ConvoyMeta
 from contracts.convoys.conveyables.fungibles import Fungibles
 from contracts.convoys.conveyables.fungibles.wood import Wood, wood_balances
 from contracts.convoys.conveyables.fungibles.human import Human, human_balances
@@ -138,6 +138,13 @@ func test_equal_attack{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : Hash
     %{ stop_prank_callable = start_prank(2) %}
     %{ warp(1) %}
     attack(id2, id1, 0, 0)
+
+    let (meta : ConvoyMeta) = get_convoy_meta(id1)
+    assert 1 = meta.owner
+
+    let (meta : ConvoyMeta) = get_convoy_meta(id2)
+    assert meta.owner = 0
+
     %{ stop_prank_callable() %}
     return ()
 end
