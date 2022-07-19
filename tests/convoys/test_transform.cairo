@@ -6,6 +6,7 @@ from starkware.cairo.common.alloc import alloc
 from contracts.convoys.conveyables import Fungible
 from contracts.convoys.conveyables.fungibles.human import Human
 from contracts.convoys.factory import create_mint_convoy
+from contracts.convoys.library import contains_convoy
 from contracts.convoys.transform import (
     transform,
     extract_fungible,
@@ -133,7 +134,7 @@ func test_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBui
     assert flat_array[1] = Fungible(Human.type, 15)
 
     let (convoy_ids_len : felt, convoy_ids : felt*) = transform(
-        2, arr, 2, output_sizes, 2, flat_array
+        2, arr, 2, output_sizes, 2, flat_array, 0, 0
     )
     assert convoy_ids_len = 2
     let convoy_id1 = convoy_ids[0]
@@ -154,6 +155,9 @@ func test_split_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     %{ stop_prank_callable = start_prank(123) %}
     let (convoy_id) = create_mint_convoy(123, 0, 0)
 
+    let (input_contained) = contains_convoy(convoy_id, 0, 0)
+    assert input_contained = TRUE
+
     let (arr : felt*) = alloc()
     assert arr[0] = convoy_id
 
@@ -166,16 +170,25 @@ func test_split_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     assert flat_array[1] = Fungible(Human.type, 2)
 
     let (convoy_ids_len : felt, convoy_ids : felt*) = transform(
-        1, arr, 2, output_sizes, 2, flat_array
+        1, arr, 2, output_sizes, 2, flat_array, 0, 0
     )
-    assert convoy_ids_len = 2
-    let convoy_id1 = convoy_ids[0]
 
+    let (input_contained) = contains_convoy(convoy_id, 0, 0)
+    assert input_contained = FALSE
+
+    assert convoy_ids_len = 2
+
+    let convoy_id1 = convoy_ids[0]
     let (conveyables1_len, conveyables1) = get_conveyables(convoy_id1)
     assert conveyables1_len = 1
+    let (output_contained) = contains_convoy(convoy_id1, 0, 0)
+    assert output_contained = TRUE
+
     let convoy_id2 = convoy_ids[1]
     let (conveyables2_len, conveyables2) = get_conveyables(convoy_id2)
     assert conveyables2_len = 1
+    let (output_contained) = contains_convoy(convoy_id2, 0, 0)
+    assert output_contained = TRUE
 
     %{ stop_prank_callable() %}
 

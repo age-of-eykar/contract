@@ -372,6 +372,55 @@ func bind_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     return ()
 end
 
+func unbind_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt
+) -> (removed : felt):
+    # Unbind the convoy fron the location [tested: test_unbind_convoy]
+    #
+    # Parameters:
+    #       convoy_id (felt) : The convoy to bind
+    #       x (felt) : The x coordinate of the location
+    #       y (felt) : The y coordinate of the location
+    #
+    # Returns:
+    #       removed (felt) : TRUE if the convoy was removed, FALSE otherwise
+    alloc_locals
+    let (link : felt) = chained_convoys.read(x, y)
+    if link == 0:
+        return (FALSE)
+    end
+
+    if link == convoy_id:
+        let (next_link) = next_chained_convoy.read(link)
+        next_chained_convoy.write(link, 0)  # optional?
+        chained_convoys.write(x, y, next_link)
+        return (TRUE)
+    end
+
+    return _unbind_convoy(convoy_id, link, x, y)
+end
+
+func _unbind_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, prev_link : felt, x : felt, y : felt
+) -> (removed : felt):
+    # algo could be improved
+    alloc_locals
+    let (link) = next_chained_convoy.read(prev_link)
+    if link == 0:
+        return (FALSE)
+    end
+
+    let (next_link) = next_chained_convoy.read(link)
+
+    if convoy_id == link:
+        next_chained_convoy.write(link, 0)
+        next_chained_convoy.write(prev_link, next_link)
+        return (TRUE)
+    else:
+        return _unbind_convoy(convoy_id, link, x, y)
+    end
+end
+
 func unsafe_move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
 ) -> ():

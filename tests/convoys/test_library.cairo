@@ -20,6 +20,7 @@ from contracts.convoys.library import (
     unsafe_move_convoy,
     move_convoy,
     burn_convoy,
+    unbind_convoy
 )
 
 @view
@@ -169,11 +170,41 @@ func test_bind_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashB
     let (convoy_id) = create_convoy(1234, 0)
     bind_convoy(convoy_id, -12, 11)
     let (convoys_len, convoys) = get_convoys(-12, 11)
-    assert convoys_len = 2
+
     assert [convoys + 1] = convoy_id
 
     return ()
 end
+
+@view
+func test_unbind_convoy_first{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
+
+    let (conveyables) = alloc()
+
+    let (convoy_id1) = create_convoy(123, 0)
+    bind_convoy(convoy_id1, -12, 11)
+    let (convoy_id2) = create_convoy(123, 0)
+    bind_convoy(convoy_id2, -12, 11)
+    let (convoys_len, convoys) = get_convoys(-12, 11)
+    assert convoys_len = 2
+    assert convoys[0] = convoy_id1
+    assert convoys[1] = convoy_id2
+
+    let (res) = unbind_convoy(convoy_id1, -12, 11)
+    assert res = TRUE
+    let (convoys_len, convoys) = get_convoys(-12, 11)
+    assert convoys_len = 1
+    assert convoys[0] = convoy_id2
+
+    let (res) = unbind_convoy(convoy_id2, -12, 11)
+    assert res = TRUE
+    let (convoys_len, convoys) = get_convoys(-12, 11)
+    assert convoys_len = 0
+
+    return ()
+end
+
 
 @view
 func test_unsafe_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():

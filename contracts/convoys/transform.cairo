@@ -2,6 +2,7 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.alloc import alloc
+from starkware.cairo.common.bool import TRUE, FALSE
 from contracts.convoys.conveyables import Fungible
 from starkware.starknet.common.syscalls import get_block_timestamp, get_caller_address
 from contracts.convoys.library import (
@@ -10,6 +11,9 @@ from contracts.convoys.library import (
     write_conveyables,
     create_convoy,
     assert_can_spend_convoy,
+    contains_convoy,
+    unbind_convoy,
+    bind_convoy,
 )
 
 @external
@@ -20,6 +24,8 @@ func transform{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
     output_sizes : felt*,
     output_len : felt,
     output : Fungible*,
+    x : felt,
+    y : felt,
 ) -> (convoy_ids_len : felt, convoy_ids : felt*):
     alloc_locals
     # first we need to ensure that the transformation is valid
@@ -33,8 +39,22 @@ func transform{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
     assert compacted_input_len = compacted_output_len
     assert_included(compacted_input_len, compacted_input, compacted_output_len, compacted_output)
 
+    # we ensure that the location is valid and unbind the convoys
+    unbind_convoys(convoy_ids_len, convoy_ids, x, y)
+
     # then we can transform the input to the output
-    return write_convoys(output_sizes_len, output_sizes, output, caller)
+    return write_convoys(output_sizes_len, output_sizes, output, caller, x, y)
+end
+
+func unbind_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_ids_len : felt, convoy_ids : felt*, x : felt, y : felt
+):
+    if convoy_ids_len == 0:
+        return ()
+    end
+    let (unbound) = unbind_convoy(convoy_ids[convoy_ids_len - 1], x, y)
+    assert unbound = TRUE
+    return unbind_convoys(convoy_ids_len - 1, convoy_ids, x, y)
 end
 
 func _sum{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -58,7 +78,12 @@ func assert_can_spend_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, 
 end
 
 func write_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    len_output_sizes : felt, output_sizes : felt*, output : Fungible*, owner : felt
+    len_output_sizes : felt,
+    output_sizes : felt*,
+    output : Fungible*,
+    owner : felt,
+    x : felt,
+    y : felt,
 ) -> (convoy_ids_len : felt, convoy_ids : felt*):
     # Create convoys with the given conveyables
     #
@@ -66,8 +91,15 @@ func write_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check
     #     len_output_sizes: length of output_sizes
     #     output_sizes: sizes of the output convoys
     #     output: the output convoys
+    #     owner: the owner of the convoys
+    #     x: the x coordinate of the location
+    #     y: the y coordinate of the location
+    #
+    # Returns:
+    #     convoy_ids_len: length of convoy_ids
+    #     convoy_ids: the ids of the convoys
     let (timestamp) = get_block_timestamp()
-    return _write_convoys(len_output_sizes, output_sizes, output, owner, timestamp)
+    return _write_convoys(len_output_sizes, output_sizes, output, owner, timestamp, x, y)
 end
 
 func _write_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -76,6 +108,8 @@ func _write_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     output : Fungible*,
     owner : felt,
     timestamp : felt,
+    x : felt,
+    y : felt,
 ) -> (convoy_ids_len : felt, convoy_ids : felt*):
     if len_output_sizes == 0:
         let (convoy_ids) = alloc()
@@ -92,8 +126,11 @@ func _write_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
         output + output_len * Fungible.SIZE,
         owner,
         timestamp,
+        x,
+        y,
     )
     assert convoy_ids[convoy_ids_len] = convoy_id
+    bind_convoy(convoy_id, x, y)
     return (convoy_ids_len + 1, convoy_ids)
 end
 
