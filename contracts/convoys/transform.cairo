@@ -28,10 +28,9 @@ func transform{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
     let (local input_len, input) = to_conveyables(convoy_ids_len, convoy_ids)
     let (output_len_) = _sum(output_sizes_len, output_sizes)
     assert output_len_ = output_len
-    assert input_len = output_len
-
     let (compacted_input_len, compacted_input) = compact_conveyables(input_len, input)
     let (compacted_output_len, compacted_output) = compact_conveyables(output_len, output)
+    assert compacted_input_len = compacted_output_len
     assert_included(compacted_input_len, compacted_input, compacted_output_len, compacted_output)
 
     # then we can transform the input to the output

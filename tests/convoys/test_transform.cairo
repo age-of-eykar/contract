@@ -147,3 +147,37 @@ func test_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBui
 
     return ()
 end
+
+@view
+func test_split_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+    alloc_locals
+    %{ stop_prank_callable = start_prank(123) %}
+    let (convoy_id) = create_mint_convoy(123, 0, 0)
+
+    let (arr : felt*) = alloc()
+    assert arr[0] = convoy_id
+
+    let (output_sizes : felt*) = alloc()
+    assert output_sizes[0] = 1
+    assert output_sizes[1] = 1
+
+    let (flat_array : Fungible*) = alloc()
+    assert flat_array[0] = Fungible(Human.type, 8)
+    assert flat_array[1] = Fungible(Human.type, 2)
+
+    let (convoy_ids_len : felt, convoy_ids : felt*) = transform(
+        1, arr, 2, output_sizes, 2, flat_array
+    )
+    assert convoy_ids_len = 2
+    let convoy_id1 = convoy_ids[0]
+
+    let (conveyables1_len, conveyables1) = get_conveyables(convoy_id1)
+    assert conveyables1_len = 1
+    let convoy_id2 = convoy_ids[1]
+    let (conveyables2_len, conveyables2) = get_conveyables(convoy_id2)
+    assert conveyables2_len = 1
+
+    %{ stop_prank_callable() %}
+
+    return ()
+end

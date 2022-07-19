@@ -19,6 +19,7 @@ from contracts.convoys.library import (
     convoy_meta,
     ConvoyMeta,
 )
+from contracts.convoys.transform import transform
 from contracts.convoys.factory import create_mint_convoy
 from contracts.combat import attack
 
