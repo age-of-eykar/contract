@@ -137,9 +137,11 @@ func test_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBui
         2, arr, 2, output_sizes, 2, flat_array, 0, 0
     )
     assert convoy_ids_len = 2
-    let convoy_id1 = convoy_ids[0]
 
+    let convoy_id1 = convoy_ids[0]
     let (conveyables1_len, conveyables1) = get_conveyables(convoy_id1)
+    assert conveyables1_len = 1
+
     let convoy_id2 = convoy_ids[1]
     let (conveyables2_len, conveyables2) = get_conveyables(convoy_id2)
     assert conveyables2_len = 1
@@ -189,6 +191,10 @@ func test_split_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     assert conveyables2_len = 1
     let (output_contained) = contains_convoy(convoy_id2, 0, 0)
     assert output_contained = TRUE
+
+    let (convoy_ids_len : felt, convoy_ids : felt*) = transform(
+        2, new (convoy_id1, convoy_id2), 1, new (1), 1, new (Fungible(Human.type, 10)), 0, 0
+    )
 
     %{ stop_prank_callable() %}
 
