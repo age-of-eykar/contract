@@ -23,38 +23,6 @@ end
 #
 # Getters
 #
-@view
-func get_convoy_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_id : felt
-) -> (meta : ConvoyMeta):
-    # Returns the ConvoyMeta of a specific convoy
-    #
-    # Parameters:
-    #       convoy_id : felt
-    #
-    #   Returns:
-    #       meta : ConvoyMeta
-    let (meta : ConvoyMeta) = convoy_meta.read(convoy_id)
-    return (meta)
-end
-
-@view
-func get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    x : felt, y : felt
-) -> (convoys_id_len : felt, convoys_id : felt*):
-    # Gets convoys located at a given location [tested: test_create_mint]
-    #
-    # Parameters:
-    #       x : x coordinate of the location
-    #       y : y coordinate of the location
-    #
-    #   Returns:
-    #       convoys_id_len : length of the convoys_id array
-    #       convoys_id : array of convoys_id
-
-    let (id) = chained_convoys.read(x, y)
-    return _get_next_convoys(id, x, y)
-end
 
 func _get_next_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, x : felt, y : felt
@@ -69,11 +37,10 @@ func _get_next_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
     return (convoys_id_len + 1, convoys_id)
 end
 
-@view
-func contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func has_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, x : felt, y : felt
 ) -> (contained : felt):
-    # Checks if a convoy is located at a given location [tested: test_contains_convoy]
+    # Checks if a convoy is located at a given location [tested: test_has_convoy]
     #
     # Parameters:
     #       x : x coordinate of the location
@@ -117,7 +84,7 @@ end
 func _convoy_can_access{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, x : felt, y : felt, x_index : felt, y_index : felt
 ) -> (bool : felt):
-    let (current) = contains_convoy(convoy_id, x + x_index, y + y_index)
+    let (current) = has_convoy(convoy_id, x + x_index, y + y_index)
     if current == TRUE:
         return (TRUE)
     end
@@ -132,7 +99,6 @@ func _convoy_can_access{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_
     return _convoy_can_access(convoy_id, x, y, x_index, y_index - 1)
 end
 
-@view
 func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt
 ) -> (strength : felt):
@@ -149,7 +115,6 @@ func get_convoy_strength{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     return (human_strength + soldier_strength)
 end
 
-@view
 func get_convoy_protection{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt
 ) -> (protection : felt):
@@ -166,8 +131,7 @@ func get_convoy_protection{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ran
     return (human_protection + soldier_protection)
 end
 
-@view
-func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+func _get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt
 ) -> (conveyables_len : felt, conveyables : Fungible*):
     # Gets the conveyables of a convoy [tested: test_get_conveyables]
@@ -184,7 +148,6 @@ func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_che
     return (conveyables_len, conveyables)
 end
 
-@view
 func can_spend_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, spender : felt
 ) -> (bool : felt):
@@ -207,7 +170,6 @@ func can_spend_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
     return (test)
 end
 
-@view
 func assert_can_spend_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, spender : felt
 ) -> ():
@@ -225,7 +187,6 @@ func assert_can_spend_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
     return ()
 end
 
-@view
 func assert_can_move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_id : felt, spender : felt
 ) -> ():
@@ -241,28 +202,6 @@ func assert_can_move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, ra
     # assert meta.availability < timestamp (not just <=)
     assert_le(meta.availability, timestamp)
     assert_not_equal(meta.availability, timestamp)
-    return ()
-end
-
-#
-# Setters
-#
-@external
-func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
-) -> ():
-    # Moves the convoy to the location if caller is the owner
-    #
-    # Parameters:
-    #       convoy_id (felt) : The convoy to move
-    #       source_x (felt) : The x coordinate of the source location
-    #       source_y (felt) : The y coordinate of the source location
-    #       target_x (felt) : The x coordinate of the target location
-    #       target_y (felt) : The y coordinate of the target location
-
-    let (caller) = get_caller_address()
-    assert_can_move_convoy(convoy_id, caller)
-    unsafe_move_convoy(convoy_id, source_x, source_y, target_x, target_y)
     return ()
 end
 

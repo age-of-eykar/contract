@@ -6,14 +6,14 @@ from starkware.cairo.common.alloc import alloc
 from contracts.convoys.conveyables import Fungible
 from contracts.convoys.conveyables.fungibles.human import Human
 from contracts.convoys.factory import create_mint_convoy
-from contracts.convoys.library import contains_convoy
+from contracts.convoys.library import has_convoy
 from contracts.eykar import transform
 from contracts.convoys.transform import (
     extract_fungible,
     add_single,
     to_conveyables,
     compact_conveyables,
-    get_conveyables,
+    _get_conveyables,
     assert_contained,
     assert_included,
 )
@@ -139,11 +139,11 @@ func test_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBui
     assert convoy_ids_len = 2
 
     let convoy_id1 = convoy_ids[0]
-    let (conveyables1_len, conveyables1) = get_conveyables(convoy_id1)
+    let (conveyables1_len, conveyables1) = _get_conveyables(convoy_id1)
     assert conveyables1_len = 1
 
     let convoy_id2 = convoy_ids[1]
-    let (conveyables2_len, conveyables2) = get_conveyables(convoy_id2)
+    let (conveyables2_len, conveyables2) = _get_conveyables(convoy_id2)
     assert conveyables2_len = 1
 
     %{ stop_prank_callable() %}
@@ -157,7 +157,7 @@ func test_split_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     %{ stop_prank_callable = start_prank(123) %}
     let (convoy_id) = create_mint_convoy(123, 0, 0)
 
-    let (input_contained) = contains_convoy(convoy_id, 0, 0)
+    let (input_contained) = has_convoy(convoy_id, 0, 0)
     assert input_contained = TRUE
 
     let (arr : felt*) = alloc()
@@ -175,21 +175,21 @@ func test_split_transform{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
         1, arr, 2, output_sizes, 2, flat_array, 0, 0
     )
 
-    let (input_contained) = contains_convoy(convoy_id, 0, 0)
+    let (input_contained) = has_convoy(convoy_id, 0, 0)
     assert input_contained = FALSE
 
     assert convoy_ids_len = 2
 
     let convoy_id1 = convoy_ids[0]
-    let (conveyables1_len, conveyables1) = get_conveyables(convoy_id1)
+    let (conveyables1_len, conveyables1) = _get_conveyables(convoy_id1)
     assert conveyables1_len = 1
-    let (output_contained) = contains_convoy(convoy_id1, 0, 0)
+    let (output_contained) = has_convoy(convoy_id1, 0, 0)
     assert output_contained = TRUE
 
     let convoy_id2 = convoy_ids[1]
-    let (conveyables2_len, conveyables2) = get_conveyables(convoy_id2)
+    let (conveyables2_len, conveyables2) = _get_conveyables(convoy_id2)
     assert conveyables2_len = 1
-    let (output_contained) = contains_convoy(convoy_id2, 0, 0)
+    let (output_contained) = has_convoy(convoy_id2, 0, 0)
     assert output_contained = TRUE
 
     let (convoy_ids_len : felt, convoy_ids : felt*) = transform(

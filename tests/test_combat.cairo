@@ -5,7 +5,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.cairo.common.alloc import alloc
 from contracts.convoys.factory import create_mint_convoy
-from contracts.convoys.library import create_convoy, bind_convoy, get_convoy_meta, ConvoyMeta
+from contracts.convoys.library import create_convoy, bind_convoy, ConvoyMeta
 from contracts.convoys.conveyables.fungibles import Fungibles
 from contracts.convoys.conveyables.fungibles.wood import Wood, wood_balances
 from contracts.convoys.conveyables.fungibles.human import Human, human_balances
@@ -17,7 +17,7 @@ from contracts.combat import (
     copy_profits,
     assert_is_puppet_of,
 )
-from contracts.eykar import mint
+from contracts.eykar import mint, get_convoy_meta
 
 @view
 func test_defender_protection_modifier{

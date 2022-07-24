@@ -6,12 +6,12 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from contracts.convoys.conveyables import Fungible
 from starkware.starknet.common.syscalls import get_block_timestamp, get_caller_address
 from contracts.convoys.library import (
-    get_conveyables,
+    _get_conveyables,
     write_conveyables_to_arr,
     write_conveyables,
     create_convoy,
     assert_can_spend_convoy,
-    contains_convoy,
+    has_convoy,
     unbind_convoy,
     bind_convoy,
 )

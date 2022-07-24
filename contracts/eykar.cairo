@@ -7,13 +7,7 @@ from starkware.cairo.common.math import assert_le, abs_value
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.alloc import alloc
 
-from contracts.world import (
-    Plot,
-    world,
-    Structure,
-    world_update,
-    assert_conquerable,
-)
+from contracts.world import Plot, world, Structure, world_update, assert_conquerable
 from contracts.coordinates import spiral, get_distance
 from contracts.colonies import (
     merge,
@@ -30,11 +24,15 @@ from contracts.colonies import (
 from contracts.convoys.library import (
     get_convoy_strength,
     convoy_can_access,
-    contains_convoy,
+    has_convoy,
     assert_can_spend_convoy,
+    assert_can_move_convoy,
     unsafe_move_convoy,
     convoy_meta,
     ConvoyMeta,
+    chained_convoys,
+    _get_next_convoys,
+    _get_conveyables,
 )
 from contracts.utils.arrays import sum
 from contracts.convoys.conveyables import Fungible
@@ -75,6 +73,72 @@ func get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
 ) -> (colonies_len : felt, colonies : felt*):
     let (colonies_len, found_colonies) = _get_player_colonies(player, 0)
     return (colonies_len, found_colonies - colonies_len)
+end
+
+# Convoys
+
+@view
+func get_convoy_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt
+) -> (meta : ConvoyMeta):
+    # Returns the ConvoyMeta of a specific convoy
+    #
+    # Parameters:
+    #       convoy_id : felt
+    #
+    #   Returns:
+    #       meta : ConvoyMeta
+    let (meta : ConvoyMeta) = convoy_meta.read(convoy_id)
+    return (meta)
+end
+
+@view
+func get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt
+) -> (convoys_id_len : felt, convoys_id : felt*):
+    # Gets convoys located at a given location [tested: test_create_mint]
+    #
+    # Parameters:
+    #       x : x coordinate of the location
+    #       y : y coordinate of the location
+    #
+    #   Returns:
+    #       convoys_id_len : length of the convoys_id array
+    #       convoys_id : array of convoys_id
+
+    let (id) = chained_convoys.read(x, y)
+    return _get_next_convoys(id, x, y)
+end
+
+@view
+func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt
+) -> (conveyables_len : felt, conveyables : Fungible*):
+    # Gets the conveyables of a convoy [tested: test_get_conveyables]
+    #
+    # Parameters:
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       conveyables_len : length of the fungible conveyables array
+    #       conveyables : array of fungible conveyable_id
+    return _get_conveyables(convoy_id)
+end
+
+@view
+func contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt
+) -> (contained : felt):
+    # Checks if a convoy is located at a given location
+    #
+    # Parameters:
+    #       x : x coordinate of the location
+    #       y : y coordinate of the location
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       contained : TRUE if the convoy is located at the location, FALSE otherwise
+    return has_convoy(convoy_id, x, y)
 end
 
 #
@@ -186,7 +250,7 @@ func conquer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     let (player) = get_caller_address()
 
     # check convoy is on this plot
-    let (test) = contains_convoy(convoy_id, x, y)
+    let (test) = has_convoy(convoy_id, x, y)
     assert test = TRUE
 
     # check plot is conquerable
@@ -244,3 +308,21 @@ func transform{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
     return write_convoys(output_sizes_len, output_sizes, output, caller, x, y)
 end
 
+@external
+func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
+) -> ():
+    # Moves the convoy to the location if caller is the owner
+    #
+    # Parameters:
+    #       convoy_id (felt) : The convoy to move
+    #       source_x (felt) : The x coordinate of the source location
+    #       source_y (felt) : The y coordinate of the source location
+    #       target_x (felt) : The x coordinate of the target location
+    #       target_y (felt) : The y coordinate of the target location
+
+    let (caller) = get_caller_address()
+    assert_can_move_convoy(convoy_id, caller)
+    unsafe_move_convoy(convoy_id, source_x, source_y, target_x, target_y)
+    return ()
+end

@@ -3,7 +3,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
-from contracts.convoys.library import assert_can_spend_convoy, contains_convoy
+from contracts.convoys.library import assert_can_spend_convoy, has_convoy
 from contracts.world import Plot, Structure, world, world_update
 from contracts.colonies import find_redirected_colony
 from contracts.map.biomes import assert_jungle_or_forest
@@ -23,7 +23,7 @@ func build_lumber_camp{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
     #   x: The x coordinate of the lumber camp.
     #   y: The y coordinate of the lumber camp.
     alloc_locals
-    let (test) = contains_convoy(convoy_id, x, y)
+    let (test) = has_convoy(convoy_id, x, y)
     assert test = TRUE
 
     let (existing_plot : Plot) = world.read(x, y)
