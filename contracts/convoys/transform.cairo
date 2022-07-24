@@ -16,36 +16,6 @@ from contracts.convoys.library import (
     bind_convoy,
 )
 
-@external
-func transform{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_ids_len : felt,
-    convoy_ids : felt*,
-    output_sizes_len : felt,
-    output_sizes : felt*,
-    output_len : felt,
-    output : Fungible*,
-    x : felt,
-    y : felt,
-) -> (convoy_ids_len : felt, convoy_ids : felt*):
-    alloc_locals
-    # first we need to ensure that the transformation is valid
-    let (caller) = get_caller_address()
-    assert_can_spend_convoys(convoy_ids_len, convoy_ids, caller)
-    let (local input_len, input) = to_conveyables(convoy_ids_len, convoy_ids)
-    let (output_len_) = _sum(output_sizes_len, output_sizes)
-    assert output_len_ = output_len
-    let (compacted_input_len, compacted_input) = compact_conveyables(input_len, input)
-    let (compacted_output_len, compacted_output) = compact_conveyables(output_len, output)
-    assert compacted_input_len = compacted_output_len
-    assert_included(compacted_input_len, compacted_input, compacted_output_len, compacted_output)
-
-    # we ensure that the location is valid and unbind the convoys
-    unbind_convoys(convoy_ids_len, convoy_ids, x, y)
-
-    # then we can transform the input to the output
-    return write_convoys(output_sizes_len, output_sizes, output, caller, x, y)
-end
-
 func unbind_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     convoy_ids_len : felt, convoy_ids : felt*, x : felt, y : felt
 ):
@@ -55,16 +25,6 @@ func unbind_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_chec
     let (unbound) = unbind_convoy(convoy_ids[convoy_ids_len - 1], x, y)
     assert unbound = TRUE
     return unbind_convoys(convoy_ids_len - 1, convoy_ids, x, y)
-end
-
-func _sum{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    felt_list_len : felt, felt_list : felt*
-) -> (sum : felt):
-    if felt_list_len == 0:
-        return (0)
-    end
-    let (rest) = _sum(felt_list_len - 1, felt_list)
-    return (rest + felt_list[felt_list_len - 1])
 end
 
 func assert_can_spend_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(

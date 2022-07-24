@@ -21,7 +21,7 @@ from contracts.convoys.library import (
     convoy_meta,
     ConvoyMeta,
 )
-from contracts.colonies import Colony, get_colony
+from contracts.colonies import Colony, find_redirected_colony
 
 @external
 func attack{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -183,7 +183,7 @@ func assert_is_puppet_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     # Returns:
     #  bool: TRUE if the colony is a puppet of the player, FALSE otherwise
     alloc_locals
-    let (colony : Colony) = get_colony(colony_id)
+    let (colony : Colony) = find_redirected_colony(colony_id)
     let (convoy_ids_len, convoy_ids) = get_convoys(colony.x, colony.y)
     let (player_strength, others_protection) = get_puppet_scores(convoy_ids_len, convoy_ids, player)
     assert_le(others_protection, player_strength)
