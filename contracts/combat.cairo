@@ -15,75 +15,15 @@ from contracts.convoys.library import (
     get_convoy_protection,
     assert_can_spend_convoy,
     can_spend_convoy,
-    contains_convoy,
-    get_convoys,
+    has_convoy,
+    chained_convoys,
+    _get_next_convoys,
     burn_convoy,
     convoy_meta,
     ConvoyMeta,
 )
-from contracts.colonies import Colony, get_colony
+from contracts.colonies import Colony, find_redirected_colony
 
-@external
-func attack{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    attacker : felt, target : felt, x : felt, y : felt
-) -> ():
-    # Attack target convoy with attacker convoy (which needs to belong to the caller)
-    # targets needs to be part of attacker plot
-    #
-    # Parameters:
-    #  attacker: The attacker's convoy
-    #  target: The target's convoy
-    #  x: The x coordinate of the target's convoy
-    #  y: The y coordinate of the target's convoy
-
-    alloc_locals
-    let (caller) = get_caller_address()
-
-    # assert attacker can be spent
-    assert_can_spend_convoy(attacker, caller)
-
-    # check attacker is on this plot
-    let (test) = contains_convoy(attacker, x, y)
-    assert test = TRUE
-
-    # assert target has arrived
-    let (timestamp) = get_block_timestamp()
-    let (meta_target : ConvoyMeta) = convoy_meta.read(target)
-    assert_le(meta_target.availability, timestamp)
-
-    # check target is on this plot
-    let (test) = contains_convoy(target, x, y)
-    assert test = TRUE
-
-    # find original stength and protection
-    let (attacker_strength) = get_convoy_strength(attacker)
-    let (attacker_protection) = get_convoy_protection(attacker)
-    let (target_strength) = get_convoy_strength(target)
-    let (target_protection) = get_convoy_protection(target)
-
-    let (modified_target_protection) = defender_protection_modifier(target_protection)
-
-    let (winner_id, loser_id, winner_protection) = perform_turns(
-        attacker,
-        attacker_strength,
-        attacker_protection,
-        target,
-        target_strength,
-        modified_target_protection,
-    )
-
-    local original_protection : felt
-    if winner_id == attacker:
-        assert original_protection = attacker_protection
-    else:
-        assert original_protection = modified_target_protection
-    end
-    copy_profits(loser_id, winner_id)
-    kill_soldiers(winner_id, winner_protection, original_protection)
-    burn_convoy(loser_id)
-
-    return ()
-end
 
 func defender_protection_modifier{
     syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr
@@ -183,8 +123,9 @@ func assert_is_puppet_of{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     # Returns:
     #  bool: TRUE if the colony is a puppet of the player, FALSE otherwise
     alloc_locals
-    let (colony : Colony) = get_colony(colony_id)
-    let (convoy_ids_len, convoy_ids) = get_convoys(colony.x, colony.y)
+    let (colony : Colony) = find_redirected_colony(colony_id)
+    let (id) = chained_convoys.read(colony.x, colony.y)
+    let (convoy_ids_len, convoy_ids) = _get_next_convoys(id, colony.x, colony.y)
     let (player_strength, others_protection) = get_puppet_scores(convoy_ids_len, convoy_ids, player)
     assert_le(others_protection, player_strength)
     return ()

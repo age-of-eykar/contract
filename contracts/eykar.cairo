@@ -7,67 +7,71 @@ from starkware.cairo.common.math import assert_le, abs_value
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.alloc import alloc
 
-from contracts.world import Plot, Structure, world, world_update, get_plot
+from contracts.world import Plot, world, Structure, world_update, assert_conquerable
 from contracts.coordinates import spiral, get_distance
-from contracts.colonies import Colony, colonies, get_colony, create_colony, redirect_colony
+from contracts.colonies import (
+    merge,
+    Colony,
+    colonies,
+    create_colony,
+    redirect_colony,
+    find_redirected_colony,
+    current_registration_id,
+    add_colony_to_player,
+    _get_next_available_plot,
+    _get_player_colonies,
+)
 from contracts.convoys.library import (
     get_convoy_strength,
+    get_convoy_protection,
     convoy_can_access,
-    contains_convoy,
+    has_convoy,
     assert_can_spend_convoy,
+    assert_can_move_convoy,
     unsafe_move_convoy,
     convoy_meta,
     ConvoyMeta,
+    chained_convoys,
+    _get_next_convoys,
+    _get_conveyables,
+    burn_convoy,
 )
-from contracts.convoys.transform import transform
+from contracts.utils.arrays import sum
+from contracts.convoys.conveyables import Fungible
+from contracts.convoys.transform import (
+    assert_can_spend_convoys,
+    to_conveyables,
+    compact_conveyables,
+    assert_included,
+    unbind_convoys,
+    write_convoys,
+)
 from contracts.convoys.factory import create_mint_convoy
-from contracts.combat import attack
+from contracts.combat import (
+    defender_protection_modifier,
+    perform_turns,
+    kill_soldiers,
+    copy_profits,
+)
 
 #
+# VIEW FUNCTIONS
+#
+
 # Colonies
-#
 
-@storage_var
-func current_registration_id() -> (id : felt):
-end
-
-func _get_next_available_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    n : felt
-) -> (x : felt, y : felt, n : felt):
-    let (x, y) = spiral(n, 16)
-    let (plot) = world.read(x, y)
-    if plot.owner == 0:
-        return (x, y, n)
-    else:
-        return _get_next_available_plot(n + 1)
-    end
-end
-
-@storage_var
-func _player_colonies_storage(player : felt, index : felt) -> (colony_id : felt):
-end
-
-func _get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    player : felt, colonies_index : felt
-) -> (colonies_len : felt, found_colonies : felt*):
-    alloc_locals
-    let (colony_id) = _player_colonies_storage.read(player, colonies_index)
-
-    if colony_id == 0:
-        let (found_colonies) = alloc()
-        return (0, found_colonies)
-    end
-
-    let (colonies_len, found_colonies) = _get_player_colonies(player, colonies_index + 1)
-    let (colony : Colony) = colonies.read(colony_id - 1)
-    let redirect : felt = colony.redirection
-
-    if colony.redirection == colony_id:
-        assert [found_colonies] = colony_id
-        return (colonies_len + 1, found_colonies + 1)
-    else:
-        return (colonies_len, found_colonies)
-    end
+@view
+func get_colony{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(id : felt) -> (
+    colony : Colony
+):
+    # Gets the colony object after multiple redirections
+    #
+    # Parameters:
+    #       id (felt): the colony id
+    #
+    #   Returns:
+    #       colony (felt): struct after redirections
+    return find_redirected_colony(id)
 end
 
 @view
@@ -78,96 +82,95 @@ func get_player_colonies{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range
     return (colonies_len, found_colonies - colonies_len)
 end
 
-func _colonies_amount{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    player : felt, colonies_index : felt
-) -> (amount : felt):
-    let (colony) = _player_colonies_storage.read(player, colonies_index)
-    if colony == 0:
-        return (0)
-    end
-    let (remaining) = _colonies_amount(player, colonies_index + 1)
-    return (1 + remaining)
-end
+# Convoys
 
-func add_colony_to_player{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    player : felt, colony_id : felt
-) -> ():
-    let (id) = _colonies_amount(player, 0)
-    _player_colonies_storage.write(player, id, colony_id)
-    return ()
-end
-
-func _merge_util{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    owner : felt, x : felt, y : felt, n : felt
-) -> (id : felt, plots_amount : felt):
-    alloc_locals
-    if n == 0:
-        return (0, 0)
-    end
-
-    let (x_shift, y_shift) = spiral(n, 0)
-    let (plot) = get_plot(x + x_shift, y + y_shift)
-    let (colony) = get_colony(plot.owner)
-
-    let (next_best_id, next_best_plots_amount) = _merge_util(owner, x, y, n - 1)
-    if colony.owner != owner:
-        return (next_best_id, next_best_plots_amount)
-    end
-
-    # if next_best_plots_amount > colony.plots_amount
-    let (sup) = is_le(next_best_plots_amount, colony.plots_amount)
-    if sup == 0:
-        if colony.redirection != 0:
-            redirect_colony(colony.redirection, next_best_id)
-            tempvar syscall_ptr = syscall_ptr
-            tempvar pedersen_ptr = pedersen_ptr
-            tempvar range_check_ptr = range_check_ptr
-        else:
-            tempvar syscall_ptr = syscall_ptr
-            tempvar pedersen_ptr = pedersen_ptr
-            tempvar range_check_ptr = range_check_ptr
-        end
-        return (next_best_id, next_best_plots_amount)
-    else:
-        if next_best_id != 0:
-            if colony.redirection != 0:
-                redirect_colony(next_best_id, colony.redirection)
-                tempvar syscall_ptr = syscall_ptr
-                tempvar pedersen_ptr = pedersen_ptr
-                tempvar range_check_ptr = range_check_ptr
-            else:
-                tempvar syscall_ptr = syscall_ptr
-                tempvar pedersen_ptr = pedersen_ptr
-                tempvar range_check_ptr = range_check_ptr
-            end
-        else:
-            tempvar syscall_ptr = syscall_ptr
-            tempvar pedersen_ptr = pedersen_ptr
-            tempvar range_check_ptr = range_check_ptr
-        end
-        return (colony.redirection, colony.plots_amount)
-    end
-end
-
-func merge{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    owner : felt, x : felt, y : felt
-) -> (id : felt):
-    # Merges colonies around a specific plot
+@view
+func get_convoy_meta{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt
+) -> (meta : ConvoyMeta):
+    # Returns the ConvoyMeta of a specific convoy
     #
     # Parameters:
-    #     owner (felt): The owner of the plot
-    #     x (felt): The x coordinate of the plot
-    #     y (felt): The y coordinate of the plot
+    #       convoy_id : felt
     #
-    # Returns:
-    #     id (felt): The id of the redirected colony
-    let (id, plots_amount) = _merge_util(owner, x, y, 9)
-    return (id)
+    #   Returns:
+    #       meta : ConvoyMeta
+    let (meta : ConvoyMeta) = convoy_meta.read(convoy_id)
+    return (meta)
+end
+
+@view
+func get_convoys{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt
+) -> (convoys_id_len : felt, convoys_id : felt*):
+    # Gets convoys located at a given location [tested: test_create_mint]
+    #
+    # Parameters:
+    #       x : x coordinate of the location
+    #       y : y coordinate of the location
+    #
+    #   Returns:
+    #       convoys_id_len : length of the convoys_id array
+    #       convoys_id : array of convoys_id
+
+    let (id) = chained_convoys.read(x, y)
+    return _get_next_convoys(id, x, y)
+end
+
+@view
+func get_conveyables{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt
+) -> (conveyables_len : felt, conveyables : Fungible*):
+    # Gets the conveyables of a convoy [tested: test_get_conveyables]
+    #
+    # Parameters:
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       conveyables_len : length of the fungible conveyables array
+    #       conveyables : array of fungible conveyable_id
+    return _get_conveyables(convoy_id)
+end
+
+@view
+func contains_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt
+) -> (contained : felt):
+    # Checks if a convoy is located at a given location
+    #
+    # Parameters:
+    #       x : x coordinate of the location
+    #       y : y coordinate of the location
+    #       convoy_id : convoy_id
+    #
+    #   Returns:
+    #       contained : TRUE if the convoy is located at the location, FALSE otherwise
+    return has_convoy(convoy_id, x, y)
 end
 
 #
-# Interactions
+# EXTERNAL FUNCTIONS
 #
+
+# World
+
+@view
+func get_plot{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    x : felt, y : felt
+) -> (plot : Plot):
+    # Gets a plot object at the given coordinates
+    #
+    # Parameters:
+    #       x (felt): The x coordinate of the plot
+    #       y (felt): The y coordinate of the plot
+    #
+    #   Returns:
+    #       plot (Plot): The plot object at the given coordinates
+    let (plot) = world.read(x, y)
+    return (plot)
+end
+
+# Territory
 
 @external
 func mint{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(name : felt):
@@ -195,33 +198,6 @@ func mint{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(nam
     end
     create_mint_convoy(player, x, y)
     world_update.emit(x, y)
-    return ()
-end
-
-func assert_conquerable{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-    convoy_id : felt, x : felt, y : felt, required_strength : felt, caller : felt
-) -> ():
-    # Asserts that the plot is conquerable by caller
-    #
-    # Parameters:
-    #     convoy_id (felt): The id of the convoy
-    #     x (felt): The x coordinate of the plot
-    #     y (felt): The y coordinate of the plot
-    #     required_strength (felt): The required strength
-    #
-
-    # Ensure the plot is not already owned
-    let (plot : Plot) = world.read(x, y)
-    assert plot.owner = 0
-
-    # check caller is convoy owner
-    # Check if the convoy is ready to be used
-    assert_can_spend_convoy(convoy_id, caller)
-
-    # Check convoy strength is enough
-    let (strength : felt) = get_convoy_strength(convoy_id)
-    assert_le(required_strength, strength)
-
     return ()
 end
 
@@ -281,7 +257,7 @@ func conquer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     let (player) = get_caller_address()
 
     # check convoy is on this plot
-    let (test) = contains_convoy(convoy_id, x, y)
+    let (test) = has_convoy(convoy_id, x, y)
     assert test = TRUE
 
     # check plot is conquerable
@@ -304,5 +280,120 @@ func conquer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         )
     end
     world_update.emit(x, y)
+    return ()
+end
+
+# Convoys
+
+@external
+func transform{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_ids_len : felt,
+    convoy_ids : felt*,
+    output_sizes_len : felt,
+    output_sizes : felt*,
+    output_len : felt,
+    output : Fungible*,
+    x : felt,
+    y : felt,
+) -> (convoy_ids_len : felt, convoy_ids : felt*):
+    alloc_locals
+    # first we need to ensure that the transformation is valid
+    let (caller) = get_caller_address()
+    assert_can_spend_convoys(convoy_ids_len, convoy_ids, caller)
+    let (local input_len, input) = to_conveyables(convoy_ids_len, convoy_ids)
+    let (output_len_) = sum(output_sizes_len, output_sizes)
+    assert output_len_ = output_len
+    let (compacted_input_len, compacted_input) = compact_conveyables(input_len, input)
+    let (compacted_output_len, compacted_output) = compact_conveyables(output_len, output)
+    assert compacted_input_len = compacted_output_len
+    assert_included(compacted_input_len, compacted_input, compacted_output_len, compacted_output)
+
+    # we ensure that the location is valid and unbind the convoys
+    unbind_convoys(convoy_ids_len, convoy_ids, x, y)
+
+    # then we can transform the input to the output
+    return write_convoys(output_sizes_len, output_sizes, output, caller, x, y)
+end
+
+@external
+func move_convoy{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, source_x : felt, source_y : felt, target_x : felt, target_y : felt
+) -> ():
+    # Moves the convoy to the location if caller is the owner
+    #
+    # Parameters:
+    #       convoy_id (felt) : The convoy to move
+    #       source_x (felt) : The x coordinate of the source location
+    #       source_y (felt) : The y coordinate of the source location
+    #       target_x (felt) : The x coordinate of the target location
+    #       target_y (felt) : The y coordinate of the target location
+
+    let (caller) = get_caller_address()
+    assert_can_move_convoy(convoy_id, caller)
+    unsafe_move_convoy(convoy_id, source_x, source_y, target_x, target_y)
+    return ()
+end
+
+# Combat
+
+@external
+func attack{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    attacker : felt, target : felt, x : felt, y : felt
+) -> ():
+    # Attack target convoy with attacker convoy (which needs to belong to the caller)
+    # targets needs to be part of attacker plot
+    #
+    # Parameters:
+    #  attacker: The attacker's convoy
+    #  target: The target's convoy
+    #  x: The x coordinate of the target's convoy
+    #  y: The y coordinate of the target's convoy
+
+    alloc_locals
+    let (caller) = get_caller_address()
+
+    # assert attacker can be spent
+    assert_can_spend_convoy(attacker, caller)
+
+    # check attacker is on this plot
+    let (test) = has_convoy(attacker, x, y)
+    assert test = TRUE
+
+    # assert target has arrived
+    let (timestamp) = get_block_timestamp()
+    let (meta_target : ConvoyMeta) = convoy_meta.read(target)
+    assert_le(meta_target.availability, timestamp)
+
+    # check target is on this plot
+    let (test) = has_convoy(target, x, y)
+    assert test = TRUE
+
+    # find original stength and protection
+    let (attacker_strength) = get_convoy_strength(attacker)
+    let (attacker_protection) = get_convoy_protection(attacker)
+    let (target_strength) = get_convoy_strength(target)
+    let (target_protection) = get_convoy_protection(target)
+
+    let (modified_target_protection) = defender_protection_modifier(target_protection)
+
+    let (winner_id, loser_id, winner_protection) = perform_turns(
+        attacker,
+        attacker_strength,
+        attacker_protection,
+        target,
+        target_strength,
+        modified_target_protection,
+    )
+
+    local original_protection : felt
+    if winner_id == attacker:
+        assert original_protection = attacker_protection
+    else:
+        assert original_protection = modified_target_protection
+    end
+    copy_profits(loser_id, winner_id)
+    kill_soldiers(winner_id, winner_protection, original_protection)
+    burn_convoy(loser_id)
+
     return ()
 end

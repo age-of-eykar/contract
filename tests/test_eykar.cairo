@@ -10,8 +10,8 @@ from contracts.eykar import (
     current_registration_id,
     get_colony,
     get_plot,
+    move_convoy
 )
-from contracts.convoys.library import move_convoy
 
 @view
 func test_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():

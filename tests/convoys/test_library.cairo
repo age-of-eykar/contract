@@ -8,20 +8,19 @@ from contracts.convoys.conveyables import Fungible
 from contracts.convoys.conveyables.fungibles import Fungibles
 from contracts.convoys.conveyables.fungibles.human import Human, human_balances
 from contracts.convoys.library import (
-    get_convoys,
-    contains_convoy,
+    has_convoy,
     convoy_can_access,
     get_convoy_strength,
     get_convoy_protection,
     write_conveyables_to_arr,
-    get_conveyables,
+    _get_conveyables,
     create_convoy,
     bind_convoy,
     unsafe_move_convoy,
-    move_convoy,
     burn_convoy,
-    unbind_convoy
+    unbind_convoy,
 )
+from contracts.eykar import get_convoys, move_convoy, get_conveyables
 
 @view
 func test_create_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
@@ -40,7 +39,7 @@ func test_create_mint{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashB
 end
 
 @view
-func test_contains_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
+func test_has_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
     let (convoy_id_1) = create_mint_convoy(123, 1, -3)
     let (convoy_id_2) = create_mint_convoy(123, 2, 5)
@@ -49,13 +48,13 @@ func test_contains_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     let (convoys_len, convoys) = get_convoys(1, 0)
     assert convoys_len = 0
 
-    let (test) = contains_convoy(convoy_id_1, 1, 0)
+    let (test) = has_convoy(convoy_id_1, 1, 0)
     assert test = FALSE
-    let (test) = contains_convoy(convoy_id_1, 1, -3)
+    let (test) = has_convoy(convoy_id_1, 1, -3)
     assert test = TRUE
-    let (test) = contains_convoy(convoy_id_2, 1, -3)
+    let (test) = has_convoy(convoy_id_2, 1, -3)
     assert test = FALSE
-    let (test) = contains_convoy(convoy_id_3, 1, -3)
+    let (test) = has_convoy(convoy_id_3, 1, -3)
     assert test = TRUE
 
     return ()
@@ -101,7 +100,7 @@ end
 func test_get_conveyables{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
     let (convoy_id) = create_mint_convoy(123, 2, -3)
-    let (conveyables_len, conveyables) = get_conveyables(convoy_id)
+    let (conveyables_len, conveyables) = _get_conveyables(convoy_id)
     assert conveyables_len = 1
     let humans = [conveyables]
     assert humans.type = Human.type
@@ -205,7 +204,6 @@ func test_unbind_convoy_first{syscall_ptr : felt*, range_check_ptr, pedersen_ptr
     return ()
 end
 
-
 @view
 func test_unsafe_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():
     alloc_locals
@@ -213,9 +211,9 @@ func test_unsafe_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr 
     let (convoy_id) = create_mint_convoy(123, 0, 0)
     unsafe_move_convoy(convoy_id, 0, 0, -10, 27)
 
-    let (test) = contains_convoy(convoy_id, 0, 0)
+    let (test) = has_convoy(convoy_id, 0, 0)
     assert test = FALSE
-    let (test) = contains_convoy(convoy_id, -10, 27)
+    let (test) = has_convoy(convoy_id, -10, 27)
     assert test = TRUE
     return ()
 end
@@ -240,7 +238,7 @@ func test_move_convoy{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashB
     let (convoy_id) = create_mint_convoy(123, 0, 0)
     %{ warp(1) %}
     move_convoy(convoy_id, 0, 0, -10, 27)
-    let (test) = contains_convoy(convoy_id, -10, 27)
+    let (test) = has_convoy(convoy_id, -10, 27)
     assert test = TRUE
     %{ stop_prank_callable() %}
     return ()

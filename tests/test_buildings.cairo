@@ -3,8 +3,7 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.bool import TRUE, FALSE
 from contracts.buildings import build_lumber_camp
-from contracts.eykar import mint, conquer
-from contracts.convoys.library import move_convoy
+from contracts.eykar import mint, conquer, move_convoy
 
 @view
 func test_build_lumber_camp_fail_on_water{
