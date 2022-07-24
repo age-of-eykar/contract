@@ -13,11 +13,10 @@ from contracts.convoys.conveyables.fungibles.soldier import Soldier, soldier_bal
 from contracts.combat import (
     defender_protection_modifier,
     kill_soldiers,
-    attack,
     copy_profits,
     assert_is_puppet_of,
 )
-from contracts.eykar import mint, get_convoy_meta
+from contracts.eykar import mint, get_convoy_meta, attack
 
 @view
 func test_defender_protection_modifier{
