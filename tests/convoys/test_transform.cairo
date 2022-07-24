@@ -7,8 +7,8 @@ from contracts.convoys.conveyables import Fungible
 from contracts.convoys.conveyables.fungibles.human import Human
 from contracts.convoys.factory import create_mint_convoy
 from contracts.convoys.library import contains_convoy
+from contracts.eykar import transform
 from contracts.convoys.transform import (
-    transform,
     extract_fungible,
     add_single,
     to_conveyables,
