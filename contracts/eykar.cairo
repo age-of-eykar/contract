@@ -7,8 +7,8 @@ from starkware.cairo.common.math import assert_le, abs_value
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.alloc import alloc
 
-from contracts.world import Plot, world, Structure, world_update, assert_conquerable
-from contracts.coordinates import spiral, get_distance
+from contracts.map.world import Plot, world, Structure, world_update, assert_conquerable
+from contracts.map.coordinates import spiral, get_distance
 from contracts.colonies import (
     merge,
     Colony,

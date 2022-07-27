@@ -2,7 +2,7 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 
-from contracts.world import Structure
+from contracts.map.world import Structure
 
 @view
 func test_structure_enum{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}():

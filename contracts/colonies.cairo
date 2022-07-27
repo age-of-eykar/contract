@@ -2,10 +2,10 @@
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.cairo.common.math import sqrt, unsigned_div_rem
-from contracts.coordinates import spiral, get_distance
+from contracts.map.coordinates import spiral, get_distance
 from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.alloc import alloc
-from contracts.world import world
+from contracts.map.world import world
 
 struct Colony:
     member name : felt  # string
