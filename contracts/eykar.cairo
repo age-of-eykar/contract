@@ -52,7 +52,9 @@ from contracts.combat import (
     perform_turns,
     kill_soldiers,
     copy_profits,
+    assert_is_puppet_of,
 )
+from contracts.exploitation.harvesting import _harvest
 
 #
 # VIEW FUNCTIONS
@@ -394,6 +396,53 @@ func attack{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     copy_profits(loser_id, winner_id)
     kill_soldiers(winner_id, winner_protection, original_protection)
     burn_convoy(loser_id)
+
+    return ()
+end
+
+# Harvesting
+
+@external
+func harvest{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt
+):
+    # Harvest the given owned location using the given convoy.
+    #
+    # Parameters:
+    #  convoy_id (felt) : The convoy to use for harvesting
+    #  x (felt) : The x coordinate of the location to harvest
+    #  y (felt) : The y coordinate of the location to harvest
+
+    # assert plot's colony belongs to caller
+
+    let (plot : Plot) = world.read(x, y)
+    let (colony : Colony) = find_redirected_colony(plot.owner)
+    let (caller) = get_caller_address()
+    assert colony.owner = caller
+    _harvest(caller, convoy_id, x, y)
+
+    return ()
+end
+
+@external
+func harvest_puppet{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt
+):
+    # Harvest the not owned but controled given location using the given convoy.
+    #
+    # Parameters:
+    #  convoy_id (felt) : The convoy to use for harvesting
+    #  x (felt) : The x coordinate of the location to harvest
+    #  y (felt) : The y coordinate of the location to harvest
+
+    # assert plot's colony is controled by caller
+
+    alloc_locals
+    let (plot : Plot) = world.read(x, y)
+    let (colony : Colony) = find_redirected_colony(plot.owner)
+    let (caller) = get_caller_address()
+    assert_is_puppet_of(colony.redirection, caller)
+    _harvest(caller, convoy_id, x, y)
 
     return ()
 end
