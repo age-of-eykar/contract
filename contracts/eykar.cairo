@@ -55,7 +55,7 @@ from contracts.combat import (
     assert_is_puppet_of,
 )
 from contracts.exploitation.harvesting import _harvest
-from contracts.exploitation.buildings import _build_lumber_camp
+from contracts.exploitation.buildings import _build_lumber_camp, _build_town
 
 #
 # VIEW FUNCTIONS
@@ -454,4 +454,11 @@ func build_lumber_camp{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_c
     convoy_id : felt, x : felt, y : felt
 ) -> ():
     return _build_lumber_camp(convoy_id, x, y)
+end
+
+@external
+func build_town{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    convoy_id : felt, x : felt, y : felt
+) -> ():
+    return _build_town(convoy_id, x, y)
 end
