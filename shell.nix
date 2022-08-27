@@ -1,6 +1,6 @@
 with import <nixpkgs> { };
 
-let pythonPackages = python3Packages;
+let pythonPackages = python39Packages;
 in pkgs.mkShell rec {
   name = "impurePythonEnv";
   venvDir = "./env";
