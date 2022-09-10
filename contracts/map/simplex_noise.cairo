@@ -7,13 +7,7 @@ from starkware.cairo.common.math_cmp import is_le, is_nn
 from starkware.cairo.common.math import unsigned_div_rem
 
 from contracts.map.szudzik import lcg, szudzik
-from contracts.utils.fixed_point_numbers import (
-    Math64x61_toFelt as to_felt,
-    Math64x61_mul as mul,
-    Math64x61_div as div,
-    Math64x61_ONE as ONE,
-    Math64x61_floor as floor,
-)
+from contracts.utils.cairo_math_64x61.math64x61 import Math64x61
 
 # 1/2 in 64.61 fixed-point format
 const HALF = 1152921504606846976
@@ -40,34 +34,34 @@ func select_grad2{range_check_ptr}(r: felt) -> (grad2: (felt, felt)):
     return ( ([gradient_address + r*2], [gradient_address + r*2+1]) )
 
     gradients:
-    dw ONE
-    dw ONE
+    dw Math64x61.ONE
+    dw Math64x61.ONE
 
-    dw -ONE
-    dw ONE
+    dw -Math64x61.ONE
+    dw Math64x61.ONE
 
-    dw ONE
-    dw -ONE
+    dw Math64x61.ONE
+    dw -Math64x61.ONE
 
-    dw -ONE
-    dw -ONE
+    dw -Math64x61.ONE
+    dw -Math64x61.ONE
 
-    dw ONE
+    dw Math64x61.ONE
     dw 0
 
-    dw -ONE
+    dw -Math64x61.ONE
     dw 0
 
     dw 0
-    dw ONE
+    dw Math64x61.ONE
 
     dw 0
-    dw -ONE
+    dw -Math64x61.ONE
 end
 
 func dot{range_check_ptr}(grad: (felt, felt), x: felt, y: felt)->(res: felt):
-    let (val_x) = mul(grad[0], x)
-    let (val_y) = mul(grad[1], y)
+    let (val_x) = Math64x61.mul(grad[0], x)
+    let (val_y) = Math64x61.mul(grad[1], y)
     return (val_x + val_y)
 end
 
@@ -77,24 +71,24 @@ func contribution{range_check_ptr}(grad: (felt, felt), x: felt, y: felt)->(res: 
     let (temp) = is_nn(t)
 
     if temp == TRUE:
-        let (t_2) = mul(t, t)
-        let (t_4) = mul(t_2, t_2)
+        let (t_2) = Math64x61.mul(t, t)
+        let (t_4) = Math64x61.mul(t_2, t_2)
         let (d) = dot(grad, x, y)
-        return mul(t_4, d)
+        return Math64x61.mul(t_4, d)
     else:
         return (0)
     end
 end
 
 func compute_t{range_check_ptr}(x: felt, y: felt) -> (t: felt):
-    let (x_2) = mul(x, x)
-    let (y_2) = mul(y, y)
+    let (x_2) = Math64x61.mul(x, x)
+    let (y_2) = Math64x61.mul(y, y)
     return (HALF - x_2 - y_2)
 end
 
 func random_szudzik{range_check_ptr}(x: felt, y: felt) -> (res: felt):
-    let (x_felt) = to_felt(x)
-    let (y_felt) = to_felt(y)
+    let (x_felt) = Math64x61.toFelt(x)
+    let (y_felt) = Math64x61.toFelt(y)
     let (temp) = szudzik(x_felt, y_felt)
     let (random) = lcg(temp, 2)
     let (_, res) = unsigned_div_rem(random, 8)
@@ -104,9 +98,9 @@ end
 func determine_simplex{range_check_ptr}(x: felt, y: felt) -> (i: felt, j: felt):
     let (temp) = is_le(x, y)
     if temp == TRUE:
-        return (0, ONE)
+        return (0, Math64x61.ONE)
     else:
-        return (ONE, 0)
+        return (Math64x61.ONE, 0)
     end
 end
 
@@ -115,11 +109,11 @@ func noise{range_check_ptr}(x: felt, y: felt) -> (noise: felt):
     alloc_locals
 
     # skew input space
-    let (s) = mul(x + y, F)
-    let (i) = floor(x + s)
-    let (j) = floor(y + s)
+    let (s) = Math64x61.mul(x + y, F)
+    let (i) = Math64x61.floor(x + s)
+    let (j) = Math64x61.floor(y + s)
 
-    let (t) = mul(G, i + j)
+    let (t) = Math64x61.mul(G, i + j)
     let x0 = x - i + t
     let y0 = y - j + t
 
@@ -128,13 +122,13 @@ func noise{range_check_ptr}(x: felt, y: felt) -> (noise: felt):
 
     let x1 = x0 - i1 + G
     let y1 = y0 - j1 + G
-    let x2 = x0 - ONE + G2
-    let y2 = y0 - ONE + G2
+    let x2 = x0 - Math64x61.ONE + G2
+    let y2 = y0 - Math64x61.ONE + G2
 
     # random gradient
     let (r0) = random_szudzik(i, j)
     let (r1) = random_szudzik(i+i1, j+j1)
-    let (r2) = random_szudzik(i+ONE, j+ONE)
+    let (r2) = random_szudzik(i+Math64x61.ONE, j+Math64x61.ONE)
 
     let (g0) = select_grad2(r0)
     let (g1) = select_grad2(r1)
@@ -146,7 +140,7 @@ func noise{range_check_ptr}(x: felt, y: felt) -> (noise: felt):
     let (n2) = contribution(g2, x2, y2)
 
     # return final value
-    let (noise) = mul(n0 + n1 + n2, SEVENTY)
+    let (noise) = Math64x61.mul(n0 + n1 + n2, SEVENTY)
     return (noise)
 end
 
@@ -155,15 +149,15 @@ func simplex_noise_bis{range_check_ptr}(
 ) -> (res: felt):
     alloc_locals
     if o == 0:
-        return div(r, max)
+        return Math64x61.div(r, max)
     else:
-        let (x_f) = mul(x, f)
-        let (y_f) = mul(y, f)
-        let (f) = mul(f, TWO)
+        let (x_f) = Math64x61.mul(x, f)
+        let (y_f) = Math64x61.mul(y, f)
+        let (f) = Math64x61.mul(f, TWO)
         let (n) = noise(x_f, y_f)
-        let (temp) = mul(n, a)
+        let (temp) = Math64x61.mul(n, a)
         let max = max + a
-        let (a) = mul(a, p)
+        let (a) = Math64x61.mul(a, p)
         return simplex_noise_bis(x=x, y=y, o=o-1, p=p, a=a, f=f, max=max, r=r+temp)
     end
 end
