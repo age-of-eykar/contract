@@ -192,11 +192,11 @@ func mint{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(nam
         world.write(
             x,
             y,
-            Plot(owner=colony.redirection, structure=Structure.SETTLER_CAMP, availability=timestamp),
+            Plot(owner=colony.redirection, structure=Structure.SETTLER_CAMP, availability=timestamp, stored=0),
         )
     else:
         world.write(
-            x, y, Plot(owner=colony_id, structure=Structure.SETTLER_CAMP, availability=timestamp)
+            x, y, Plot(owner=colony_id, structure=Structure.SETTLER_CAMP, availability=timestamp, stored=0)
         )
     end
     create_mint_convoy(player, x, y)
@@ -239,7 +239,7 @@ func expand{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
 
     # add plot to colony of source
     let (timestamp) = get_block_timestamp()
-    world.write(target_x, target_y, Plot(owner=colony_id, structure=2, availability=timestamp))
+    world.write(target_x, target_y, Plot(owner=colony_id, structure=2, availability=timestamp, stored=0))
     world_update.emit(target_x, target_y)
     return ()
 end
@@ -275,11 +275,11 @@ func conquer{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         world.write(
             x,
             y,
-            Plot(owner=colony.redirection, structure=Structure.SETTLER_CAMP, availability=timestamp),
+            Plot(owner=colony.redirection, structure=Structure.SETTLER_CAMP, availability=timestamp, stored=0),
         )
     else:
         world.write(
-            x, y, Plot(owner=colony_id, structure=Structure.SETTLER_CAMP, availability=timestamp)
+            x, y, Plot(owner=colony_id, structure=Structure.SETTLER_CAMP, availability=timestamp, stored=0)
         )
     end
     world_update.emit(x, y)

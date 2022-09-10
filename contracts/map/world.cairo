@@ -8,6 +8,7 @@ struct Plot:
     member owner : felt
     member structure : felt
     member availability : felt
+    member stored : felt
 end
 
 struct Structure:
