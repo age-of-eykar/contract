@@ -4,6 +4,19 @@ from contracts.map.simplex_noise import simplex_noise
 from starkware.cairo.common.math_cmp import is_le, is_nn
 from starkware.cairo.common.bool import TRUE, FALSE
 
+struct Biome:
+    member MOUNTAIN : felt
+    member ICE_MOUNTAIN : felt
+    member FROZEN_LAND : felt
+    member DESERT : felt
+    member PLAIN : felt
+    member COAST : felt
+    member FOREST : felt
+    member JUNGLE : felt
+    member OCEAN : felt
+    member ICEBERG : felt
+    member FROZEN_OCEAN : felt
+end
 const FRACT_PART = 2 ** 61
 
 # About units:

@@ -15,6 +15,7 @@ struct Structure:
     member NONE : felt
     member SETTLER_CAMP : felt
     member LUMBER_CAMP : felt
+    member BARRACKS : felt
     member TOWN : felt
 end
 
