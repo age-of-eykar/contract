@@ -4,19 +4,6 @@ from contracts.map.simplex_noise import simplex_noise
 from starkware.cairo.common.math_cmp import is_le, is_nn
 from starkware.cairo.common.bool import TRUE, FALSE
 
-struct Biome:
-    member MOUNTAIN : felt
-    member ICE_MOUNTAIN : felt
-    member FROZEN_LAND : felt
-    member DESERT : felt
-    member PLAIN : felt
-    member COAST : felt
-    member FOREST : felt
-    member JUNGLE : felt
-    member OCEAN : felt
-    member ICEBERG : felt
-    member FROZEN_OCEAN : felt
-end
 const FRACT_PART = 2 ** 61
 
 # About units:
@@ -31,6 +18,100 @@ end
 # So convertion must be done before and after using this functions.
 func get_temperature{range_check_ptr}(x : felt, y : felt) -> (res : felt):
     return simplex_noise(x, y, 1, FRACT_PART, 34587645138205409)
+end
+
+func lumbercamp_modifier{}(x : felt, y : felt) -> (modifier : felt):
+    # Returns lumber camp production modifier.
+    # For jungles:
+    #   floor((t-0,1)*10+1)
+    # For forests:
+    #   floor(6*(e-0,2)+1)
+    #
+    # Parameters:
+    #   x: the x-Coordinate of the plot
+    #   y: the y-Coordinate of the plot
+
+    # 0.1 in 64x61 fixed point format
+    const ONE_TENTH = 230584300921369395
+
+    # 0.2 in 64x61 fixed point format
+    const ONE_FIFTH = 461168601842738790
+
+    # 0.4 in 64x61 fixed point format
+    const FOUR_TENTH = 
+
+    let (temperature) = get_temperature(x_frac, y_frac)
+    let (condition) = is_le(temperature, FOUR_TENTH)
+
+    # if forest
+    if condition:
+        
+    else # if jungle
+
+    end
+
+end
+
+func extreme_biome_modfier{}(x : felt, y : felt) -> (modifier : felt):
+    # Returns plot's extreme modifier.
+    # Plain, Coast, Forest, Jungle  -> 1
+    # Mountain, Frozen land         -> 2
+    # Ice Mountain, Desert          -> 3
+    #
+    # Parameters:
+    #   x: the x-Coordinate of the plot
+    #   y: the y-Coordinate of the plot
+
+    # 0.05 in 64x61 fixed point format
+    const FIVE_HUNDREDTH = 
+
+    # 0.7 in 64x61 fixed point format
+    const SEVEN_TENTH = 1614090106449585766
+
+    # -0.9 in 64x61 fixed point format
+    const NEG_NINE_TENTH = 
+
+    alloc_locals
+    let x_frac = x * FRACT_PART
+    let y_frac = y * FRACT_PART
+
+    let (elevation) = get_elevation(x_frac, y_frac)
+    let (temperature) = get_temperature(x_frac, y_frac)
+
+    # condition: 0,05 < elevation <= 0,7
+    let (condition_1) = is_le(FIVE_HUNDREDTH, elevation)
+    let (condition_2) = is_le(elevation, SEVEN_TENTH)
+    if condition_1 and condition_2:
+        # condition: temperature < -0,9
+        let (condition) = is_le(temperature, NEG_NINE_TENTH)
+        if condition:
+            # frozen lands
+            return (2)
+        end
+        # condition: temperature > 0,7
+        let (condition) = is_le(SEVEN_TENTH, temperature)
+        if condition:
+            # desert
+            return (3)
+        end
+        return (1)
+    end
+
+    # condition: elevation > 0,7
+    let (condition) = is_le(SEVEN_TENTH, elevation)
+    if condition:
+        # condition: temperature < -0,9
+        let (condition) = is_le(temperature, NEG_NINE_TENTH)
+        if condition:
+            # ice mountain
+            return(3)
+        else
+            # mountain
+            return (2)
+        end
+    end
+    # rest
+    return (1)
 end
 
 func assert_jungle_or_forest{range_check_ptr}(x : felt, y : felt) -> ():
