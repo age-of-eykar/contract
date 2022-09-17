@@ -1,8 +1,10 @@
 %lang starknet
 
-from contracts.map.simplex_noise import simplex_noise
 from starkware.cairo.common.math_cmp import is_le, is_nn
 from starkware.cairo.common.bool import TRUE, FALSE
+
+from contracts.map.simplex_noise import simplex_noise
+from contracts.utils.cairo_math_64x61.math64x61 import Math64x61
 
 const FRACT_PART = 2 ** 61
 
@@ -38,16 +40,17 @@ func lumbercamp_modifier{}(x : felt, y : felt) -> (modifier : felt):
     const ONE_FIFTH = 461168601842738790
 
     # 0.4 in 64x61 fixed point format
-    const FOUR_TENTH = 
+    const FOUR_TENTH = 922337203685477580
 
     let (temperature) = get_temperature(x_frac, y_frac)
     let (condition) = is_le(temperature, FOUR_TENTH)
 
     # if forest
     if condition:
-        
+        let (elevation) = get_elevation(x_frac, y_frac)
+        return Math64x61.toFelt(6 * (elevation - ONE_FIFTH) + Math64x61.ONE)
     else # if jungle
-
+        return Math64x61.toFelt((temperature - ONE_TENTH) * 10 + Math64x61.ONE)
     end
 
 end
@@ -63,13 +66,13 @@ func extreme_biome_modfier{}(x : felt, y : felt) -> (modifier : felt):
     #   y: the y-Coordinate of the plot
 
     # 0.05 in 64x61 fixed point format
-    const FIVE_HUNDREDTH = 
+    const FIVE_HUNDREDTH = 115292150460684697
 
     # 0.7 in 64x61 fixed point format
     const SEVEN_TENTH = 1614090106449585766
 
     # -0.9 in 64x61 fixed point format
-    const NEG_NINE_TENTH = 
+    const NEG_NINE_TENTH = -2075258708292324556
 
     alloc_locals
     let x_frac = x * FRACT_PART
