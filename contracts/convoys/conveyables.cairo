@@ -1,6 +1,6 @@
 %lang starknet
 
-struct Fungible:
-    member type : felt
-    member data : felt  # usually amount
-end
+struct Fungible {
+    type: felt,
+    data: felt,  // usually amount
+}
