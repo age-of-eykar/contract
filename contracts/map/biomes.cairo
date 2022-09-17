@@ -52,7 +52,6 @@ func lumbercamp_modifier{}(x : felt, y : felt) -> (modifier : felt):
     else # if jungle
         return Math64x61.toFelt((temperature - ONE_TENTH) * 10 + Math64x61.ONE)
     end
-
 end
 
 func extreme_biome_modfier{}(x : felt, y : felt) -> (modifier : felt):
@@ -71,8 +70,8 @@ func extreme_biome_modfier{}(x : felt, y : felt) -> (modifier : felt):
     # 0.7 in 64x61 fixed point format
     const SEVEN_TENTH = 1614090106449585766
 
-    # -0.9 in 64x61 fixed point format
-    const NEG_NINE_TENTH = -2075258708292324556
+    # 0.9 in 64x61 fixed point format
+    const NINE_TENTH = 2075258708292324556
 
     alloc_locals
     let x_frac = x * FRACT_PART
@@ -86,7 +85,7 @@ func extreme_biome_modfier{}(x : felt, y : felt) -> (modifier : felt):
     let (condition_2) = is_le(elevation, SEVEN_TENTH)
     if condition_1 and condition_2:
         # condition: temperature < -0,9
-        let (condition) = is_le(temperature, NEG_NINE_TENTH)
+        let (condition) = is_le(temperature, -NINE_TENTH)
         if condition:
             # frozen lands
             return (2)
