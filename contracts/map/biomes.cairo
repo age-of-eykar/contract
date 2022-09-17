@@ -22,7 +22,7 @@ func get_temperature{range_check_ptr}(x: felt, y: felt) -> (res: felt) {
     return simplex_noise(x, y, 1, FRACT_PART, 34587645138205409);
 }
 
-func lumbercamp_modifier{}(x: felt, y: felt) -> (modifier: felt) {
+func lumbercamp_modifier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt) {
     // Returns lumber camp production modifier.
     // For jungles:
     //   floor((t-0,1)*10+1)
@@ -42,20 +42,23 @@ func lumbercamp_modifier{}(x: felt, y: felt) -> (modifier: felt) {
     // 0.4 in 64x61 fixed point format
     const FOUR_TENTH = 922337203685477580;
 
+    alloc_locals;
+    let x_frac = x * FRACT_PART;
+    let y_frac = y * FRACT_PART;
     let (temperature) = get_temperature(x_frac, y_frac);
     let condition = is_le(temperature, FOUR_TENTH);
 
     // if forest
     if (condition == TRUE) {
         let (elevation) = get_elevation(x_frac, y_frac);
-        return Math64x61.toFelt(6 * (elevation - ONE_FIFTH) + Math64x61.ONE);
+        return (modifier=Math64x61.toFelt(6 * (elevation - ONE_FIFTH) + Math64x61.ONE),);
         // if jungle
     } else {
-        return Math64x61.toFelt((temperature - ONE_TENTH) * 10 + Math64x61.ONE);
+        return (modifier=Math64x61.toFelt((temperature - ONE_TENTH) * 10 + Math64x61.ONE),);
     }
 }
 
-func extreme_biome_modfier{}(x: felt, y: felt) -> (modifier: felt) {
+func extreme_biome_modfier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt) {
     // Returns plot's extreme modifier.
     // Plain, Coast, Forest, Jungle  -> 1
     // Mountain, Frozen land         -> 2
@@ -104,7 +107,7 @@ func extreme_biome_modfier{}(x: felt, y: felt) -> (modifier: felt) {
     let condition = is_le(SEVEN_TENTH, elevation);
     if (condition == TRUE) {
         // condition: temperature < -0,9
-        let condition = is_le(temperature, NEG_NINE_TENTH);
+        let condition = is_le(temperature, -NINE_TENTH);
         if (condition == TRUE) {
             // ice mountain
             return (3,);
