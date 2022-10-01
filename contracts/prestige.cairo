@@ -12,6 +12,6 @@ func add_prestige{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
     player: felt, prestige: felt
 ) -> () {
     let (current_prestige) = prestige_per_player.read(player);
-
+    prestige_per_player.write(player, current_prestige + prestige);
     return ();
 }

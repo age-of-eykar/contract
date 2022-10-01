@@ -56,6 +56,7 @@ from contracts.combat import (
 )
 from contracts.exploitation.harvesting import _harvest
 from contracts.exploitation.buildings import _build_lumber_camp, _build_town
+from contracts.prestige import prestige_per_player
 
 //
 // VIEW FUNCTIONS
@@ -151,10 +152,6 @@ func contains_convoy{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check
     return has_convoy(convoy_id, x, y);
 }
 
-//
-// EXTERNAL FUNCTIONS
-//
-
 // World
 
 @view
@@ -172,6 +169,27 @@ func get_plot{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     let (plot) = world.read(x, y);
     return (plot,);
 }
+
+// Prestige
+
+@view
+func get_prestige{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    player: felt
+) -> (prestige: felt) {
+    // Gets the amount of prestige of a specific player
+    //
+    // Parameters:
+    //       player (felt): The player address
+    //
+    //   Returns:
+    //       prestige (felt): The prestige of the specified player
+    let (prestige) = prestige_per_player.read(player);
+    return (prestige,);
+}
+
+//
+// EXTERNAL FUNCTIONS
+//
 
 // Territory
 
