@@ -6,7 +6,27 @@ from starkware.cairo.common.bool import TRUE, FALSE
 from contracts.map.simplex_noise import simplex_noise
 from contracts.utils.cairo_math_64x61.math64x61 import Math64x61
 
+
+// CONST:
 const FRACT_PART = 2 ** 61;
+
+// 0.9 in 64x61 fixed point format
+const NINE_TENTH     = 2075258708292324556;
+
+// 0.7 in 64x61 fixed point format
+const SEVEN_TENTH    = 1614090106449585766;
+
+// 0.4 in 64x61 fixed point format
+const FOUR_TENTH = 922337203685477580;
+
+// 0.2 in 64x61 fixed point format
+const ONE_FIFTH      = 461168601842738790;
+
+// 0.1 in 64x61 fixed point format
+const ONE_TENTH      = 230584300921369395;
+       
+// 0.05 in 64x61 fixed point format
+const FIVE_HUNDREDTH = 115292150460684697;
 
 // About units:
 // Parameters and return values are float, represented by 64.61 floating point format
@@ -33,15 +53,6 @@ func lumbercamp_modifier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt) 
     //   x: the x-Coordinate of the plot
     //   y: the y-Coordinate of the plot
 
-    // 0.1 in 64x61 fixed point format
-    const ONE_TENTH = 230584300921369395;
-
-    // 0.2 in 64x61 fixed point format
-    const ONE_FIFTH = 461168601842738790;
-
-    // 0.4 in 64x61 fixed point format
-    const FOUR_TENTH = 922337203685477580;
-
     alloc_locals;
     let x_frac = x * FRACT_PART;
     let y_frac = y * FRACT_PART;
@@ -60,22 +71,14 @@ func lumbercamp_modifier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt) 
 
 func extreme_biome_modfier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt) {
     // Returns plot's extreme modifier.
-    // Plain, Coast, Forest, Jungle  -> 1
-    // Mountain, Frozen land         -> 2
-    // Ice Mountain, Desert          -> 3
+    // Plain, Coast                   -> 1
+    // Forest, jungle                 -> 2
+    // Frozen land, Mountain, Desert  -> 3
+    // Ice Mountain                   -> 4
     //
     // Parameters:
     //   x: the x-Coordinate of the plot
     //   y: the y-Coordinate of the plot
-
-    // 0.05 in 64x61 fixed point format
-    const FIVE_HUNDREDTH = 115292150460684697;
-
-    // 0.7 in 64x61 fixed point format
-    const SEVEN_TENTH = 1614090106449585766;
-
-    // 0.9 in 64x61 fixed point format
-    const NINE_TENTH = 2075258708292324556;
 
     alloc_locals;
     let x_frac = x * FRACT_PART;
@@ -84,40 +87,44 @@ func extreme_biome_modfier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt
     let (elevation) = get_elevation(x_frac, y_frac);
     let (temperature) = get_temperature(x_frac, y_frac);
 
-    // condition: 0,05 < elevation <= 0,7
-    let condition_1 = is_le(FIVE_HUNDREDTH, elevation);
-    let condition_2 = is_le(elevation, SEVEN_TENTH);
-    if (condition_1 == TRUE and condition_2 == TRUE) {
-        // condition: temperature < -0,9
-        let condition = is_le(temperature, -NINE_TENTH);
-        if (condition == TRUE) {
-            // frozen lands
-            return (2,);
-        }
-        // condition: temperature > 0,7
-        let condition = is_le(SEVEN_TENTH, temperature);
-        if (condition == TRUE) {
-            // desert
-            return (3,);
-        }
-        return (1,);
-    }
-
-    // condition: elevation > 0,7
-    let condition = is_le(SEVEN_TENTH, elevation);
+    // condition: elevation >= 0
+    let condition = is_le(0, elevation);
     if (condition == TRUE) {
-        // condition: temperature < -0,9
-        let condition = is_le(temperature, -NINE_TENTH);
-        if (condition == TRUE) {
-            // ice mountain
+        // condition: elevation > 0.7
+        let condition = is_le(elevation, SEVEN_TENTH);
+        if (condition == FALSE) {
+            // condition: temperature < -0.9
+            let condition = is_le(-NINE_TENTH, temperature);
+            if (condition == FALSE) {
+                return (4,);
+            } else {
+                return (3,);
+            }
+        }
+
+        // condition: temperature < -0.9
+        let condition = is_le(-NINE_TENTH, temperature);
+        if (condition == FALSE) {
             return (3,);
-        } else {
-            // mountain
+        }
+
+        // condition: elevation > 0.2 and temperature > 0.1
+        let condition_1 = is_le(elevation, ONE_FIFTH);
+        let condition_2 = is_le(temperature, ONE_TENTH);
+        if (condition_1 == FALSE and condition_2 == FALSE) {
             return (2,);
         }
+
+        // condition: temperature > 0.7
+        let condition = is_le(temperature, SEVEN_TENTH);
+        if (condition == FALSE) {
+            return (3,);
+        }
+
+        return (1,);
+    } else {
+        return (0,);   
     }
-    // rest
-    return (1,);
 }
 
 func assert_jungle_or_forest{range_check_ptr}(x: felt, y: felt) -> () {
@@ -126,15 +133,6 @@ func assert_jungle_or_forest{range_check_ptr}(x: felt, y: felt) -> () {
     // Parameters:
     //   x: the x-Coordinate of the plot
     //   y: the y-Coordinate of the plot
-
-    // 0.1 in 64x61 fixed point format
-    const ONE_TENTH = 230584300921369395;
-
-    // 0.2 in 64x61 fixed point format
-    const ONE_FIFTH = 461168601842738790;
-
-    // 0.7 in 64x61 fixed point format
-    const SEVEN_TENTH = 1614090106449585766;
 
     alloc_locals;
     let x_frac = x * FRACT_PART;

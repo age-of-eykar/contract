@@ -5,6 +5,7 @@ from contracts.map.biomes import (
     get_temperature,
     assert_not_ocean,
     assert_jungle_or_forest,
+    extreme_biome_modfier,
 )
 from starkware.cairo.common.bool import TRUE
 from starkware.cairo.common.math_cmp import is_le
@@ -53,6 +54,27 @@ func test_temperature{range_check_ptr}() {
     assert temperature0 = 0;
     assert res1 = TRUE;
     assert res2 = TRUE;
+    return ();
+}
+
+@view
+func test_extreme_biome_modifier{range_check_ptr}() {
+    alloc_locals;
+    let (ocean_modifier)           = extreme_biome_modfier(445, 324);
+    let (plain_modifier)           = extreme_biome_modfier(543, 314);
+    let (desert_modifier)          = extreme_biome_modfier(631, -770);
+    let (frozen_ocean_modifier)    = extreme_biome_modfier(551, -942);
+    let (frozen_land_modifier)     = extreme_biome_modfier(-2329, -1288);
+    let (mountain_modifier)        = extreme_biome_modfier(-2472, -1642);
+    let (forest_modifier)          = extreme_biome_modfier(-10264, -7549);
+    
+    assert ocean_modifier        = 0;
+    assert plain_modifier        = 1;
+    assert desert_modifier       = 3;
+    assert frozen_ocean_modifier = 0;
+    assert frozen_land_modifier  = 3;
+    assert mountain_modifier     = 3;
+    assert forest_modifier       = 2;
     return ();
 }
 
