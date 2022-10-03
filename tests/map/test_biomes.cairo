@@ -6,6 +6,7 @@ from contracts.map.biomes import (
     assert_not_ocean,
     assert_jungle_or_forest,
     extreme_biome_modfier,
+    lumbercamp_modifier,
 )
 from starkware.cairo.common.bool import TRUE
 from starkware.cairo.common.math_cmp import is_le
@@ -68,13 +69,31 @@ func test_extreme_biome_modifier{range_check_ptr}() {
     let (mountain_modifier)        = extreme_biome_modfier(-2472, -1642);
     let (forest_modifier)          = extreme_biome_modfier(-10264, -7549);
     
-    assert ocean_modifier        = 0;
-    assert plain_modifier        = 1;
-    assert desert_modifier       = 3;
-    assert frozen_ocean_modifier = 0;
-    assert frozen_land_modifier  = 3;
-    assert mountain_modifier     = 3;
-    assert forest_modifier       = 2;
+    assert ocean_modifier          = 0;
+    assert plain_modifier          = 1;
+    assert desert_modifier         = 3;
+    assert frozen_ocean_modifier   = 0;
+    assert frozen_land_modifier    = 3;
+    assert mountain_modifier       = 3;
+    assert forest_modifier         = 2;
+    return ();
+}
+
+@view
+func test_lumbercamp_modifier{range_check_ptr}() {
+    alloc_locals;
+    let (jungle_modifier_1)     = lumbercamp_modifier(63, 36);
+    let (jungle_modifier_2)     = lumbercamp_modifier(-806, -87);
+    let (jungle_modifier_3)     = lumbercamp_modifier(65, -51);
+    let (forest_modifier_1)     = lumbercamp_modifier(-806, -78);
+    let (forest_modifier_2)     = lumbercamp_modifier(-682, -173);
+
+    assert jungle_modifier_1    = 1;
+    assert jungle_modifier_2    = 2;
+    assert jungle_modifier_3    = 3;
+    assert forest_modifier_1    = 3;
+    assert forest_modifier_2    = 2;
+
     return ();
 }
 

@@ -45,7 +45,7 @@ func get_temperature{range_check_ptr}(x: felt, y: felt) -> (res: felt) {
 func lumbercamp_modifier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt) {
     // Returns lumber camp production modifier.
     // For jungles:
-    //   floor((t-0,1)*10+1)
+    //   floor((t-0,4)*10+1)
     // For forests:
     //   floor(6*(e-0,2)+1)
     //
@@ -63,9 +63,10 @@ func lumbercamp_modifier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt) 
     if (condition == TRUE) {
         let (elevation) = get_elevation(x_frac, y_frac);
         return (modifier=Math64x61.toFelt(6 * (elevation - ONE_FIFTH) + Math64x61.ONE),);
-        // if jungle
+    
+    // if jungle
     } else {
-        return (modifier=Math64x61.toFelt((temperature - ONE_TENTH) * 10 + Math64x61.ONE),);
+        return (modifier=Math64x61.toFelt((temperature - FOUR_TENTH) * 10 + Math64x61.ONE),);
     }
 }
 
