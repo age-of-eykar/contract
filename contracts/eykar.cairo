@@ -55,7 +55,11 @@ from contracts.combat import (
     assert_is_puppet_of,
 )
 from contracts.exploitation.harvesting import _harvest
-from contracts.exploitation.buildings import _build_lumber_camp, _build_town
+from contracts.exploitation.buildings import (
+    _build_lumber_camp,
+    _build_town,
+    _build_barrack,
+)
 from contracts.prestige import prestige_per_player
 
 //
@@ -485,4 +489,11 @@ func build_town{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}
     convoy_id: felt, x: felt, y: felt
 ) -> () {
     return _build_town(convoy_id, x, y);
+}
+
+@external
+func build_barrack{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    convoy_id: felt, x: felt, y: felt
+) -> () {
+    return _build_barrack(convoy_id, x, y);
 }
