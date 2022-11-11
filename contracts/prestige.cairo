@@ -46,8 +46,6 @@ func difficulty_modifier{}(conveyables: felt) -> (mod_d: felt) {
     return (mod_d=1);
 }
 
-// Receiving prestige when you harvest :
-// prestige (1pt) / 300 resource harvested
 func harvest_prestige{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(player: felt, amount: felt, convoyable: felt) {
     let (mod_d) = difficulty_modifier(convoyable);
     let (player_faction) = factions.read(player);

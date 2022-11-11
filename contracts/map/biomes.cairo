@@ -9,29 +9,39 @@ from contracts.utils.cairo_math_64x61.math64x61 import Math64x61
 const FRACT_PART = 2 ** 61;
 
 // 0.9 in 64x61 fixed point format
-const NINE_TENTH     = 2075258708292324556;
+const NINE_TENTH        = 2075258708292324556;
+
+// 0.85 in 64x61 fixed point format
+const HEIGHT_HALF_TENTH = 1959966557831639859;
 
 // 0.7 in 64x61 fixed point format
-const SEVEN_TENTH    = 1614090106449585766;
+const SEVEN_TENTH       = 1614090106449585766;
 
 // 0.4 in 64x61 fixed point format
-const FOUR_TENTH = 922337203685477580;
+const FOUR_TENTH        = 922337203685477580;
 
 // 0.2 in 64x61 fixed point format
-const ONE_FIFTH      = 461168601842738790;
+const ONE_FIFTH         = 461168601842738790;
 
 // 0.1 in 64x61 fixed point format
-const ONE_TENTH      = 230584300921369395;
+const ONE_TENTH         = 230584300921369395;
        
 // 0.05 in 64x61 fixed point format
-const FIVE_HUNDREDTH = 115292150460684697;
+const FIVE_HUNDREDTH    = 115292150460684697;
 
 // todo: biomes struct
 struct Biome {
+    COAST: felt,
+    ICEBERG: felt,
+    FROZEN_OCEAN: felt,
+    OCEAN: felt,
+    ICE_MOUNTAIN: felt,
+    MOUNTAIN: felt,
+    FROZEN_LAND: felt,
     FOREST: felt,
     JUNGLE: felt,
-    OCEAN: felt,
-    COAST: felt,
+    DESERT: felt,
+    PLAIN: felt,
 }
 
 // About units:
@@ -48,7 +58,7 @@ func get_temperature{range_check_ptr}(x: felt, y: felt) -> (res: felt) {
     return simplex_noise(x, y, 1, FRACT_PART, 34587645138205409);
 }
 
-func get_biome{range_check_ptr}(x: felt, y: felt) -> (felt) {
+func get_plot_biome{range_check_ptr}(x: felt, y: felt) -> (felt) {
     alloc_locals;
     let x_frac = x * FRACT_PART;
     let y_frac = y * FRACT_PART;
@@ -56,15 +66,61 @@ func get_biome{range_check_ptr}(x: felt, y: felt) -> (felt) {
     let (elevation) = get_elevation(x_frac, y_frac);
 
     let pos_ele = is_nn(elevation);
-    if (pos_ele == TRUE and ) {
-        return (Biome.COAST);
+    let coast_ele = is_le(elevation, FIVE_HUNDREDTH);
+    if (pos_ele == TRUE and coast_ele == TRUE) {
+        return (Biome.COAST,);
+    }
+    
+    let neg_ele = is_le(elevation, 0);
+    if (neg_ele == TRUE) {
+        let min_temp = is_le(temperature, NINE_TENTH);
+        if (min_temp == TRUE) {
+            return (Biome.ICEBERG,);
+        }
+        let min_temp = is_le(temperature, HEIGHT_HALF_TENTH);
+        if (min_temp == TRUE) {
+            return (Biome.FROZEN_OCEAN,);
+        }
+        return (Biome.OCEAN,);
     }
 
-    if () {
-        if () {
-        
+    let max_ele = is_le(SEVEN_TENTH, elevation);
+    if (max_ele == TRUE) {
+        let min_temp = is_le(temperature, NINE_TENTH);
+        if (min_temp == TRUE) {
+            return (Biome.ICE_MOUNTAIN,);
         }
+        return (Biome.MOUNTAIN,);
     }
+
+    let min_temp = is_le(temperature, NINE_TENTH);
+    if (min_temp == TRUE) {
+        return (Biome.FROZEN_LAND,);
+    }
+
+    let mid_ele = is_le(ONE_FIFTH, elevation);
+    let mid_temp = is_le(ONE_TENTH, temperature);
+    if (mid_ele == TRUE and mid_temp == TRUE) {
+        let temp = is_le(temperature, FOUR_TENTH);
+        if (temp == TRUE) {
+            return (Biome.FOREST,);
+        }
+        let temp = is_le(temperature, SEVEN_TENTH);
+        if (temp == TRUE) {
+            return (Biome.JUNGLE,);
+        }
+        let max_temp = is_le(SEVEN_TENTH, temperature);
+        if (max_temp == TRUE) {
+            return (Biome.DESERT,);
+        }
+        return (Biome.PLAIN,);
+    }
+
+    let max_temp = is_le(SEVEN_TENTH, temperature);
+    if (max_temp == TRUE) {
+        return (Biome.DESERT,);
+    }
+    return (Biome.PLAIN,);
 }
 
 func lumbercamp_modifier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt) {
