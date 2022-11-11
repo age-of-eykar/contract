@@ -58,7 +58,7 @@ func get_temperature{range_check_ptr}(x: felt, y: felt) -> (res: felt) {
     return simplex_noise(x, y, 1, FRACT_PART, 34587645138205409);
 }
 
-func get_plot_biome{range_check_ptr}(x: felt, y: felt) -> (felt) {
+func get_biome{range_check_ptr}(x: felt, y: felt) -> (felt) {
     alloc_locals;
     let x_frac = x * FRACT_PART;
     let y_frac = y * FRACT_PART;
