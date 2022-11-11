@@ -2,10 +2,8 @@
 
 from starkware.cairo.common.math_cmp import is_le, is_nn
 from starkware.cairo.common.bool import TRUE, FALSE
-
 from contracts.map.simplex_noise import simplex_noise
 from contracts.utils.cairo_math_64x61.math64x61 import Math64x61
-
 
 // CONST:
 const FRACT_PART = 2 ** 61;
@@ -28,6 +26,14 @@ const ONE_TENTH      = 230584300921369395;
 // 0.05 in 64x61 fixed point format
 const FIVE_HUNDREDTH = 115292150460684697;
 
+// todo: biomes struct
+struct Biome {
+    FOREST: felt,
+    JUNGLE: felt,
+    OCEAN: felt,
+    COAST: felt,
+}
+
 // About units:
 // Parameters and return values are float, represented by 64.61 floating point format
 // So convertion must be done before and after using this functions.
@@ -40,6 +46,25 @@ func get_elevation{range_check_ptr}(x: felt, y: felt) -> (res: felt) {
 // So convertion must be done before and after using this functions.
 func get_temperature{range_check_ptr}(x: felt, y: felt) -> (res: felt) {
     return simplex_noise(x, y, 1, FRACT_PART, 34587645138205409);
+}
+
+func get_biome{range_check_ptr}(x: felt, y: felt) -> (felt) {
+    alloc_locals;
+    let x_frac = x * FRACT_PART;
+    let y_frac = y * FRACT_PART;
+    let (temperature) = get_temperature(x_frac, y_frac);
+    let (elevation) = get_elevation(x_frac, y_frac);
+
+    let pos_ele = is_nn(elevation);
+    if (pos_ele == TRUE and ) {
+        return (Biome.COAST);
+    }
+
+    if () {
+        if () {
+        
+        }
+    }
 }
 
 func lumbercamp_modifier{range_check_ptr}(x: felt, y: felt) -> (modifier: felt) {
